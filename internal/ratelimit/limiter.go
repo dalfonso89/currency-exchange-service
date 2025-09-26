@@ -1,7 +1,6 @@
 package ratelimit
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -14,7 +13,7 @@ import (
 
 // Limiter implements a token bucket rate limiter per IP
 type Limiter struct {
-	configuration *config.Config
+	Configuration *config.Config
 	logger        *logger.Logger
 	
 	// Map of IP -> token bucket
@@ -39,7 +38,7 @@ type TokenBucket struct {
 // NewLimiter creates a new rate limiter
 func NewLimiter(configuration *config.Config, logger *logger.Logger) *Limiter {
 	rateLimiter := &Limiter{
-		configuration: configuration,
+		Configuration: configuration,
 		logger:        logger,
 		clientBuckets: make(map[string]*TokenBucket),
 		cleanupTicker: time.NewTicker(5 * time.Minute),
@@ -54,7 +53,7 @@ func NewLimiter(configuration *config.Config, logger *logger.Logger) *Limiter {
 
 // Allow checks if a request from the given IP is allowed
 func (rateLimiter *Limiter) Allow(clientIP string) bool {
-	if !rateLimiter.configuration.RateLimitEnabled {
+	if !rateLimiter.Configuration.RateLimitEnabled {
 		return true
 	}
 	
@@ -62,11 +61,11 @@ func (rateLimiter *Limiter) Allow(clientIP string) bool {
 	tokenBucket, bucketExists := rateLimiter.clientBuckets[clientIP]
 	if !bucketExists {
 		tokenBucket = &TokenBucket{
-			capacity:     rateLimiter.configuration.RateLimitBurst,
-			tokens:       rateLimiter.configuration.RateLimitBurst,
+			capacity:     rateLimiter.Configuration.RateLimitBurst,
+			tokens:       rateLimiter.Configuration.RateLimitBurst,
 			lastRefill:   time.Now(),
-			refillRate:   rateLimiter.configuration.RateLimitRequests,
-			refillPeriod: rateLimiter.configuration.RateLimitWindow,
+			refillRate:   rateLimiter.Configuration.RateLimitRequests,
+			refillPeriod: rateLimiter.Configuration.RateLimitWindow,
 		}
 		rateLimiter.clientBuckets[clientIP] = tokenBucket
 	}
@@ -79,13 +78,13 @@ func (rateLimiter *Limiter) Allow(clientIP string) bool {
 func (rateLimiter *Limiter) Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
-			clientIP := rateLimiter.getClientIP(request)
+			clientIP := rateLimiter.GetClientIP(request)
 			
 			if !rateLimiter.Allow(clientIP) {
 				rateLimiter.logger.Warnf("Rate limit exceeded for IP: %s", clientIP)
-				responseWriter.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", rateLimiter.configuration.RateLimitRequests))
+				responseWriter.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", rateLimiter.Configuration.RateLimitRequests))
 				responseWriter.Header().Set("X-RateLimit-Remaining", "0")
-				responseWriter.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", time.Now().Add(rateLimiter.configuration.RateLimitWindow).Unix()))
+				responseWriter.Header().Set("X-RateLimit-Reset", fmt.Sprintf("%d", time.Now().Add(rateLimiter.Configuration.RateLimitWindow).Unix()))
 				http.Error(responseWriter, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
@@ -95,16 +94,16 @@ func (rateLimiter *Limiter) Middleware() func(http.Handler) http.Handler {
 	}
 }
 
-// getClientIP extracts the real client IP from the request
-func (rateLimiter *Limiter) getClientIP(request *http.Request) string {
+// GetClientIP extracts the real client IP from the request
+func (rateLimiter *Limiter) GetClientIP(request *http.Request) string {
 	// Check X-Forwarded-For header
 	if xForwardedFor := request.Header.Get("X-Forwarded-For"); xForwardedFor != "" {
 		if clientIP := net.ParseIP(xForwardedFor); clientIP != nil {
 			return clientIP.String()
 		}
 		// If multiple IPs, take the first one
-		if ipAddresses := net.SplitHostPort(xForwardedFor); len(ipAddresses) > 0 {
-			if clientIP := net.ParseIP(ipAddresses[0]); clientIP != nil {
+		if host, _, err := net.SplitHostPort(xForwardedFor); err == nil {
+			if clientIP := net.ParseIP(host); clientIP != nil {
 				return clientIP.String()
 			}
 		}

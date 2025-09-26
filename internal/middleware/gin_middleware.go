@@ -3,23 +3,25 @@ package middleware
 import (
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"currency-exchange-api/internal/logger"
+
+	"github.com/gin-gonic/gin"
 )
 
 // RequestLogger creates a custom request logger middleware
 func RequestLogger(logger *logger.Logger) gin.HandlerFunc {
 	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		return logger.Logger.WithFields(map[string]interface{}{
-			"timestamp":   param.TimeStamp.Format(time.RFC3339),
-			"status":      param.StatusCode,
-			"latency":     param.Latency,
-			"client_ip":   param.ClientIP,
-			"method":      param.Method,
-			"path":        param.Path,
-			"user_agent":  param.Request.UserAgent(),
-			"error":       param.ErrorMessage,
+		logger.Logger.WithFields(map[string]interface{}{
+			"timestamp":  param.TimeStamp.Format(time.RFC3339),
+			"status":     param.StatusCode,
+			"latency":    param.Latency,
+			"client_ip":  param.ClientIP,
+			"method":     param.Method,
+			"path":       param.Path,
+			"user_agent": param.Request.UserAgent(),
+			"error":      param.ErrorMessage,
 		}).Info("HTTP Request")
+		return ""
 	})
 }
 
@@ -61,4 +63,3 @@ func randomString(length int) string {
 	}
 	return string(b)
 }
-
