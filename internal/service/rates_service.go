@@ -13,6 +13,78 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
+// Custom error types for better error handling with type switches
+type ErrorType int
+
+const (
+	ErrorTypeNoProviders ErrorType = iota
+	ErrorTypeContextCancelled
+	ErrorTypeProviderFailed
+	ErrorTypeNetworkError
+	ErrorTypeInvalidResponse
+	ErrorTypeUnknown
+)
+
+// ServiceError represents a service-specific error with type information
+type ServiceError struct {
+	Type    ErrorType
+	Message string
+	Cause   error
+}
+
+func (e ServiceError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %v", e.Message, e.Cause)
+	}
+	return e.Message
+}
+
+// classifyError classifies an error and returns appropriate error type
+func classifyError(err error) ErrorType {
+	if err == nil {
+		return ErrorTypeUnknown
+	}
+
+	// Use type switch for error classification
+	switch err.(type) {
+	case *ServiceError:
+		return err.(*ServiceError).Type
+	default:
+		// Check error message patterns
+		errMsg := err.Error()
+		switch {
+		case contains(errMsg, "context canceled") || contains(errMsg, "context deadline exceeded"):
+			return ErrorTypeContextCancelled
+		case contains(errMsg, "network") || contains(errMsg, "connection") || contains(errMsg, "timeout"):
+			return ErrorTypeNetworkError
+		case contains(errMsg, "invalid response") || contains(errMsg, "parse"):
+			return ErrorTypeInvalidResponse
+		default:
+			return ErrorTypeUnknown
+		}
+	}
+}
+
+// contains checks if a string contains a substring (case-insensitive)
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			(len(s) > len(substr) &&
+				(s[:len(substr)] == substr ||
+					s[len(s)-len(substr):] == substr ||
+					findSubstring(s, substr))))
+}
+
+// findSubstring performs a simple substring search
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
 type RatesService struct {
 	configuration *config.Config
 	logger        *logrus.Logger
@@ -61,7 +133,10 @@ func (ratesService *RatesService) GetRates(requestContext context.Context, baseC
 // fetchRatesFromProviders fetches rates from all enabled providers concurrently
 func (ratesService *RatesService) fetchRatesFromProviders(requestContext context.Context, baseCurrency string) (models.RatesResponse, error) {
 	if len(ratesService.providers) == 0 {
-		return models.RatesResponse{}, fmt.Errorf("no exchange rate providers configured")
+		return models.RatesResponse{}, &ServiceError{
+			Type:    ErrorTypeNoProviders,
+			Message: "no exchange rate providers configured",
+		}
 	}
 
 	type providerResult struct {
@@ -99,7 +174,11 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 		select {
 		case <-requestContext.Done():
 			if firstError == nil {
-				firstError = requestContext.Err()
+				firstError = &ServiceError{
+					Type:    ErrorTypeContextCancelled,
+					Message: "request context cancelled",
+					Cause:   requestContext.Err(),
+				}
 			}
 			break
 		case result := <-resultsChannel:
@@ -116,12 +195,25 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 				return result.data, nil
 			}
 
-			// Only increment successCount on actual success (this was a bug)
-			// successCount++ // This line was incorrectly placed
-			if firstError == nil {
-				firstError = result.err
-			} else {
+			// Handle provider errors using type switches
+			errorType := classifyError(result.err)
+			switch errorType {
+			case ErrorTypeContextCancelled:
+				ratesService.logger.Warnf("Provider cancelled: %v", result.err)
+			case ErrorTypeNetworkError:
+				ratesService.logger.Warnf("Provider network error: %v", result.err)
+			case ErrorTypeInvalidResponse:
+				ratesService.logger.Warnf("Provider invalid response: %v", result.err)
+			default:
 				ratesService.logger.Warnf("Provider failed: %v", result.err)
+			}
+
+			if firstError == nil {
+				firstError = &ServiceError{
+					Type:    ErrorTypeProviderFailed,
+					Message: "provider request failed",
+					Cause:   result.err,
+				}
 			}
 		}
 	}

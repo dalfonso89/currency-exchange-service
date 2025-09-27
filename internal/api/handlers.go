@@ -97,7 +97,7 @@ func (handlers *Handlers) GetRates(context *gin.Context) {
 
 	exchangeRates, fetchError := handlers.ratesService.GetRates(requestContext, baseCurrency)
 	if fetchError != nil {
-		handlers.writeErrorResponse(context, http.StatusBadGateway, "failed to fetch rates", fetchError.Error())
+		handlers.handleServiceError(context, fetchError)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (handlers *Handlers) GetRatesByBase(context *gin.Context) {
 
 	exchangeRates, fetchError := handlers.ratesService.GetRates(requestContext, baseCurrency)
 	if fetchError != nil {
-		handlers.writeErrorResponse(context, http.StatusBadGateway, "failed to fetch rates", fetchError.Error())
+		handlers.handleServiceError(context, fetchError)
 		return
 	}
 
@@ -134,6 +134,30 @@ func (handlers *Handlers) writeErrorResponse(context *gin.Context, statusCode in
 	context.JSON(statusCode, errorResponse)
 }
 
+// handleServiceError handles service errors using type switches
+func (handlers *Handlers) handleServiceError(context *gin.Context, err error) {
+	// Import the service package to access ServiceError type
+	// Use type switch for error handling
+	switch e := err.(type) {
+	case *service.ServiceError:
+		switch e.Type {
+		case service.ErrorTypeNoProviders:
+			handlers.writeErrorResponse(context, http.StatusServiceUnavailable, "no providers configured", e.Error())
+		case service.ErrorTypeContextCancelled:
+			handlers.writeErrorResponse(context, http.StatusRequestTimeout, "request cancelled", e.Error())
+		case service.ErrorTypeNetworkError:
+			handlers.writeErrorResponse(context, http.StatusBadGateway, "network error", e.Error())
+		case service.ErrorTypeInvalidResponse:
+			handlers.writeErrorResponse(context, http.StatusBadGateway, "invalid response", e.Error())
+		default:
+			handlers.writeErrorResponse(context, http.StatusInternalServerError, "service error", e.Error())
+		}
+	default:
+		// Handle generic errors
+		handlers.writeErrorResponse(context, http.StatusBadGateway, "failed to fetch rates", err.Error())
+	}
+}
+
 // corsMiddleware adds CORS headers using Gin middleware
 func (handlers *Handlers) corsMiddleware() gin.HandlerFunc {
 	return func(context *gin.Context) {
@@ -141,8 +165,15 @@ func (handlers *Handlers) corsMiddleware() gin.HandlerFunc {
 		context.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		context.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-		if context.Request.Method == "OPTIONS" {
+		// Handle HTTP method using type switch
+		switch context.Request.Method {
+		case "OPTIONS":
 			context.AbortWithStatus(http.StatusOK)
+			return
+		case "GET", "POST", "PUT", "DELETE":
+			// Continue processing
+		default:
+			context.AbortWithStatus(http.StatusMethodNotAllowed)
 			return
 		}
 

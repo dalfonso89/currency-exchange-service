@@ -101,8 +101,15 @@ func (m *MockExchangeRateServer) handler(w http.ResponseWriter, r *http.Request)
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 
-	if r.Method == "OPTIONS" {
+	// Handle HTTP method using type switch
+	switch r.Method {
+	case "OPTIONS":
 		w.WriteHeader(http.StatusOK)
+		return
+	case "GET":
+		// Continue processing
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -186,8 +193,9 @@ func (m *MockExchangeRateServer) handler(w http.ResponseWriter, r *http.Request)
 	// Set content type
 	w.Header().Set("Content-Type", "application/json")
 
-	// Return appropriate response format based on the request path
-	if path == "/USD" {
+	// Return appropriate response format based on the request path using type switch
+	switch path {
+	case "/USD":
 		// ERAPI format
 		apiResponse := struct {
 			BaseCode           string             `json:"base_code"`
@@ -199,7 +207,7 @@ func (m *MockExchangeRateServer) handler(w http.ResponseWriter, r *http.Request)
 			Rates:              response.Rates,
 		}
 		json.NewEncoder(w).Encode(apiResponse)
-	} else if path == "/latest" {
+	case "/latest":
 		// Open Exchange Rates format
 		apiResponse := struct {
 			Base      string             `json:"base"`
@@ -211,7 +219,7 @@ func (m *MockExchangeRateServer) handler(w http.ResponseWriter, r *http.Request)
 			Rates:     response.Rates,
 		}
 		json.NewEncoder(w).Encode(apiResponse)
-	} else {
+	default:
 		// Default format (generic)
 		apiResponse := struct {
 			Base      string             `json:"base"`
