@@ -227,10 +227,15 @@ func TestLimiter_Middleware(t *testing.T) {
 
 		handler.ServeHTTP(w, req)
 
-		if w.Code == http.StatusOK {
+		// Handle status codes using tagged switch
+		switch w.Code {
+		case http.StatusOK:
 			successCount++
-		} else if w.Code == http.StatusTooManyRequests {
+		case http.StatusTooManyRequests:
 			rateLimitedCount++
+		default:
+			// Log unexpected status codes for debugging
+			t.Logf("Unexpected status code: %d", w.Code)
 		}
 	}
 
