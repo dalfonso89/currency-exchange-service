@@ -10,19 +10,20 @@ import (
 	"time"
 
 	"currency-exchange-api/internal/config"
-	"currency-exchange-api/internal/logger"
 	"currency-exchange-api/internal/models"
+
+	"github.com/sirupsen/logrus"
 )
 
 // HTTPExchangeRateProvider implements ExchangeRateProvider for HTTP-based APIs
 type HTTPExchangeRateProvider struct {
 	config     config.ExchangeRateProvider
-	logger     *logger.Logger
+	logger     *logrus.Logger
 	httpClient *http.Client
 }
 
 // NewHTTPExchangeRateProvider creates a new HTTP-based exchange rate provider
-func NewHTTPExchangeRateProvider(config config.ExchangeRateProvider, logger *logger.Logger) *HTTPExchangeRateProvider {
+func NewHTTPExchangeRateProvider(config config.ExchangeRateProvider, logger *logrus.Logger) *HTTPExchangeRateProvider {
 	httpTransport := &http.Transport{
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 100,

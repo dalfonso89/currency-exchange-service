@@ -8,15 +8,15 @@ import (
 	"time"
 
 	"currency-exchange-api/internal/config"
-	"currency-exchange-api/internal/logger"
 	"currency-exchange-api/internal/models"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
 )
 
 type RatesService struct {
 	configuration *config.Config
-	logger        *logger.Logger
+	logger        *logrus.Logger
 	providers     []ExchangeRateProvider
 
 	cacheMutex sync.RWMutex
@@ -25,7 +25,7 @@ type RatesService struct {
 	singleFlightGroup singleflight.Group
 }
 
-func NewRatesService(configuration *config.Config, logger *logger.Logger) *RatesService {
+func NewRatesService(configuration *config.Config, logger *logrus.Logger) *RatesService {
 	// Create provider factory and get all enabled providers
 	providerFactory := NewProviderFactory(configuration, logger)
 	providers := providerFactory.CreateProviders()

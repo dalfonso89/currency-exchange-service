@@ -6,13 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// Logger wraps logrus.Logger
-type Logger struct {
-	*logrus.Logger
-}
-
 // New creates a new logger instance
-func New(level string) *Logger {
+func New(level string) *logrus.Logger {
 	log := logrus.New()
 	log.SetOutput(os.Stdout)
 	log.SetFormatter(&logrus.JSONFormatter{})
@@ -31,6 +26,5 @@ func New(level string) *Logger {
 		log.SetLevel(logrus.InfoLevel)
 	}
 
-	return &Logger{Logger: log}
+	return log
 }
-

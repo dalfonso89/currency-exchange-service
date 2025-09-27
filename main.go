@@ -1,17 +1,17 @@
 package main
 
 import (
-    "context"
-    "log"
-    "net/http"
-    "time"
+	"context"
+	"log"
+	"net/http"
+	"time"
 
-    "currency-exchange-api/internal/api"
-    "currency-exchange-api/internal/config"
-    "currency-exchange-api/internal/logger"
-    "currency-exchange-api/internal/platform"
-    "currency-exchange-api/internal/ratelimit"
-    "currency-exchange-api/internal/service"
+	"currency-exchange-api/internal/api"
+	"currency-exchange-api/internal/config"
+	"currency-exchange-api/internal/logger"
+	"currency-exchange-api/internal/platform"
+	"currency-exchange-api/internal/ratelimit"
+	"currency-exchange-api/internal/service"
 )
 
 func main() {
@@ -51,10 +51,10 @@ func main() {
 		}
 	}()
 
-    // Create a shutdown context that works across platforms
-    shutdownCtx, stop := platform.NewShutdownContext(context.Background())
-    defer stop()
-    <-shutdownCtx.Done()
+	// Create a shutdown context that works across platforms
+	shutdownCtx, stop := platform.NewShutdownContext(context.Background())
+	defer stop()
+	<-shutdownCtx.Done()
 
 	logger.Info("Shutting down server...")
 
@@ -71,4 +71,3 @@ func main() {
 
 	logger.Info("Server exited")
 }
-

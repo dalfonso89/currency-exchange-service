@@ -9,18 +9,19 @@ import (
 	"time"
 
 	"currency-exchange-api/internal/config"
-	"currency-exchange-api/internal/logger"
+
+	"github.com/sirupsen/logrus"
 )
 
 // APIService handles external API calls
 type APIService struct {
 	configuration *config.Config
-	logger        *logger.Logger
+	logger        *logrus.Logger
 	httpClient    *http.Client
 }
 
 // NewAPIService creates a new API service
-func NewAPIService(configuration *config.Config, logger *logger.Logger) *APIService {
+func NewAPIService(configuration *config.Config, logger *logrus.Logger) *APIService {
 	httpTransport := &http.Transport{
 		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 100,

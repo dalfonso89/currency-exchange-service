@@ -6,10 +6,12 @@ import (
 	"currency-exchange-api/internal/logger"
 	"currency-exchange-api/internal/models"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 // MockLogger creates a mock logger for testing
-func MockLogger() *logger.Logger {
+func MockLogger() *logrus.Logger {
 	return logger.New("debug")
 }
 

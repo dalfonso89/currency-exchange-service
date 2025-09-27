@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // IntegrationTestSuite provides comprehensive integration testing with concurrent load testing
@@ -22,7 +23,7 @@ type IntegrationTestSuite struct {
 	server                    *httptest.Server
 	handlers                  *Handlers
 	config                    *config.Config
-	logger                    *logger.Logger
+	logger                    *logrus.Logger
 	mockExchangeRateServer    *testutils.MockExchangeRateServer
 	mockJSONPlaceholderServer *testutils.MockJSONPlaceholderServer
 }

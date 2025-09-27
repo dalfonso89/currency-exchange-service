@@ -8,18 +8,19 @@ import (
 	"time"
 
 	"currency-exchange-api/internal/config"
-	"currency-exchange-api/internal/logger"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Limiter implements a token bucket rate limiter per IP
 type Limiter struct {
 	Configuration *config.Config
-	logger        *logger.Logger
-	
+	logger        *logrus.Logger
+
 	// Map of IP -> token bucket
 	clientBuckets map[string]*TokenBucket
 	bucketsMutex  sync.RWMutex
-	
+
 	// Cleanup goroutine control
 	cleanupTicker *time.Ticker
 	stopCleanup   chan struct{}
@@ -36,7 +37,7 @@ type TokenBucket struct {
 }
 
 // NewLimiter creates a new rate limiter
-func NewLimiter(configuration *config.Config, logger *logger.Logger) *Limiter {
+func NewLimiter(configuration *config.Config, logger *logrus.Logger) *Limiter {
 	rateLimiter := &Limiter{
 		Configuration: configuration,
 		logger:        logger,
@@ -44,10 +45,10 @@ func NewLimiter(configuration *config.Config, logger *logger.Logger) *Limiter {
 		cleanupTicker: time.NewTicker(5 * time.Minute),
 		stopCleanup:   make(chan struct{}),
 	}
-	
+
 	// Start cleanup goroutine
 	go rateLimiter.cleanup()
-	
+
 	return rateLimiter
 }
 
@@ -56,7 +57,7 @@ func (rateLimiter *Limiter) Allow(clientIP string) bool {
 	if !rateLimiter.Configuration.RateLimitEnabled {
 		return true
 	}
-	
+
 	rateLimiter.bucketsMutex.Lock()
 	tokenBucket, bucketExists := rateLimiter.clientBuckets[clientIP]
 	if !bucketExists {
@@ -70,7 +71,7 @@ func (rateLimiter *Limiter) Allow(clientIP string) bool {
 		rateLimiter.clientBuckets[clientIP] = tokenBucket
 	}
 	rateLimiter.bucketsMutex.Unlock()
-	
+
 	return tokenBucket.Allow()
 }
 
@@ -79,7 +80,7 @@ func (rateLimiter *Limiter) Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 			clientIP := rateLimiter.GetClientIP(request)
-			
+
 			if !rateLimiter.Allow(clientIP) {
 				rateLimiter.logger.Warnf("Rate limit exceeded for IP: %s", clientIP)
 				responseWriter.Header().Set("X-RateLimit-Limit", fmt.Sprintf("%d", rateLimiter.Configuration.RateLimitRequests))
@@ -88,7 +89,7 @@ func (rateLimiter *Limiter) Middleware() func(http.Handler) http.Handler {
 				http.Error(responseWriter, "Rate limit exceeded", http.StatusTooManyRequests)
 				return
 			}
-			
+
 			next.ServeHTTP(responseWriter, request)
 		})
 	}
@@ -108,14 +109,14 @@ func (rateLimiter *Limiter) GetClientIP(request *http.Request) string {
 			}
 		}
 	}
-	
+
 	// Check X-Real-IP header
 	if xRealIP := request.Header.Get("X-Real-IP"); xRealIP != "" {
 		if clientIP := net.ParseIP(xRealIP); clientIP != nil {
 			return clientIP.String()
 		}
 	}
-	
+
 	// Fall back to RemoteAddr
 	clientIP, _, parseError := net.SplitHostPort(request.RemoteAddr)
 	if parseError != nil {
@@ -155,26 +156,26 @@ func (rateLimiter *Limiter) Stop() {
 func (tokenBucket *TokenBucket) Allow() bool {
 	tokenBucket.mu.Lock()
 	defer tokenBucket.mu.Unlock()
-	
+
 	currentTime := time.Now()
-	
+
 	// Refill tokens based on time elapsed
 	if currentTime.After(tokenBucket.lastRefill) {
 		timeElapsed := currentTime.Sub(tokenBucket.lastRefill)
 		tokensToAdd := int(timeElapsed.Seconds() / tokenBucket.refillPeriod.Seconds() * float64(tokenBucket.refillRate))
-		
+
 		if tokensToAdd > 0 {
 			tokenBucket.tokens = minimum(tokenBucket.capacity, tokenBucket.tokens+tokensToAdd)
 			tokenBucket.lastRefill = currentTime
 		}
 	}
-	
+
 	// Check if we have tokens available
 	if tokenBucket.tokens > 0 {
 		tokenBucket.tokens--
 		return true
 	}
-	
+
 	return false
 }
 

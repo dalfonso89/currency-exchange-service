@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
-	"currency-exchange-api/internal/logger"
 	"currency-exchange-api/internal/middleware"
 	"currency-exchange-api/internal/models"
 	"currency-exchange-api/internal/ratelimit"
@@ -18,14 +18,14 @@ import (
 // Handlers contains all HTTP handlers
 type Handlers struct {
 	apiService   *service.APIService
-	logger       *logger.Logger
+	logger       *logrus.Logger
 	startTime    time.Time
 	ratesService *service.RatesService
 	rateLimiter  *ratelimit.Limiter
 }
 
 // NewHandlers creates a new handlers instance
-func NewHandlers(apiService *service.APIService, logger *logger.Logger) *Handlers {
+func NewHandlers(apiService *service.APIService, logger *logrus.Logger) *Handlers {
 	return &Handlers{
 		apiService: apiService,
 		logger:     logger,

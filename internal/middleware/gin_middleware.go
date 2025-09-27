@@ -3,15 +3,14 @@ package middleware
 import (
 	"time"
 
-	"currency-exchange-api/internal/logger"
-
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // RequestLogger creates a custom request logger middleware
-func RequestLogger(logger *logger.Logger) gin.HandlerFunc {
+func RequestLogger(logger *logrus.Logger) gin.HandlerFunc {
 	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		logger.Logger.WithFields(map[string]interface{}{
+		logger.WithFields(map[string]interface{}{
 			"timestamp":  param.TimeStamp.Format(time.RFC3339),
 			"status":     param.StatusCode,
 			"latency":    param.Latency,

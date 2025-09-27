@@ -3,8 +3,9 @@ package service
 import (
 	"context"
 	"currency-exchange-api/internal/config"
-	"currency-exchange-api/internal/logger"
 	"currency-exchange-api/internal/models"
+
+	"github.com/sirupsen/logrus"
 )
 
 // ExchangeRateProvider defines the interface for exchange rate providers
@@ -18,11 +19,11 @@ type ExchangeRateProvider interface {
 // ProviderFactory creates provider instances
 type ProviderFactory struct {
 	config *config.Config
-	logger *logger.Logger
+	logger *logrus.Logger
 }
 
 // NewProviderFactory creates a new provider factory
-func NewProviderFactory(config *config.Config, logger *logger.Logger) *ProviderFactory {
+func NewProviderFactory(config *config.Config, logger *logrus.Logger) *ProviderFactory {
 	return &ProviderFactory{
 		config: config,
 		logger: logger,
