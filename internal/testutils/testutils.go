@@ -1,0 +1,110 @@
+package testutils
+
+import (
+	"context"
+	"currency-exchange-api/internal/config"
+	"currency-exchange-api/internal/logger"
+	"currency-exchange-api/internal/models"
+	"time"
+)
+
+// MockLogger creates a mock logger for testing
+func MockLogger() *logger.Logger {
+	return logger.New("debug")
+}
+
+// MockConfig creates a mock configuration for testing
+func MockConfig() *config.Config {
+	return &config.Config{
+		Port:       "8081",
+		LogLevel:   "debug",
+		APIBaseURL: "https://jsonplaceholder.typicode.com",
+		APIKey:     "test-key",
+		Timeout:    30 * time.Second,
+		RetryCount: 3,
+		RetryDelay: 1 * time.Second,
+
+		ExchangeRateProviders: []config.ExchangeRateProvider{
+			{
+				Name:       "test-provider",
+				BaseURL:    "https://api.test.com/latest",
+				APIKey:     "test-api-key",
+				Enabled:    true,
+				Priority:   1,
+				Timeout:    30 * time.Second,
+				RetryCount: 3,
+				RetryDelay: 1 * time.Second,
+			},
+		},
+		RatesCacheTTL:         60 * time.Second,
+		MaxConcurrentRequests: 4,
+
+		RateLimitEnabled:  true,
+		RateLimitRequests: 100,
+		RateLimitWindow:   60 * time.Second,
+		RateLimitBurst:    10,
+	}
+}
+
+// MockRatesResponse creates a mock rates response for testing
+func MockRatesResponse() models.RatesResponse {
+	return models.RatesResponse{
+		Base:      "USD",
+		Timestamp: time.Now().Unix(),
+		Rates: map[string]float64{
+			"EUR": 0.85,
+			"GBP": 0.73,
+			"JPY": 110.0,
+		},
+		Provider: "test-provider",
+	}
+}
+
+// MockConvertResponse creates a mock convert response for testing
+func MockConvertResponse() models.ConvertResponse {
+	return models.ConvertResponse{
+		From:      "USD",
+		To:        "EUR",
+		Amount:    100.0,
+		Rate:      0.85,
+		Converted: 85.0,
+		Provider:  "test-provider",
+	}
+}
+
+// MockHealthCheck creates a mock health check response for testing
+func MockHealthCheck() models.HealthCheck {
+	return models.HealthCheck{
+		Status:    "healthy",
+		Timestamp: time.Now(),
+		Version:   "1.0.0",
+		Uptime:    "1m30s",
+	}
+}
+
+// MockAPIResponse creates a mock API response for testing
+func MockAPIResponse() models.APIResponse {
+	return models.APIResponse{
+		Data:   map[string]interface{}{"id": 1, "title": "test"},
+		Status: 200,
+	}
+}
+
+// MockErrorResponse creates a mock error response for testing
+func MockErrorResponse() models.ErrorResponse {
+	return models.ErrorResponse{
+		Error:   "test error",
+		Message: "test error message",
+		Code:    400,
+	}
+}
+
+// MockContext creates a mock context for testing
+func MockContext() context.Context {
+	return context.Background()
+}
+
+// MockContextWithTimeout creates a mock context with timeout for testing
+func MockContextWithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
+}

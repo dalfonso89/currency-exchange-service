@@ -58,8 +58,13 @@ func generateRequestID() string {
 func randomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
+	now := time.Now()
 	for i := range b {
-		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
+		// Use a more random approach with multiple time sources and index
+		seed := now.UnixNano() + int64(i)*1000000 + int64(now.Nanosecond())
+		b[i] = charset[seed%int64(len(charset))]
+		// Add a small delay to ensure different timestamps
+		time.Sleep(time.Nanosecond)
 	}
 	return string(b)
 }

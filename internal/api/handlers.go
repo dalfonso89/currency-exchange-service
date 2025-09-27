@@ -72,8 +72,6 @@ func (handlers *Handlers) SetupRoutes() *gin.Engine {
 	{
 		// Currency exchange routes
 		apiV1.GET("/rates", handlers.GetRates)
-		apiV1.GET("/convert", handlers.Convert)
-		apiV1.GET("/currencies", handlers.GetSupportedCurrencies)
 		apiV1.GET("/rates/:base", handlers.GetRatesByBase)
 
 		// Legacy API routes (for backward compatibility)
@@ -128,44 +126,6 @@ func (handlers *Handlers) GetRates(context *gin.Context) {
 	context.JSON(http.StatusOK, exchangeRates)
 }
 
-// Convert converts an amount between currencies
-func (handlers *Handlers) Convert(context *gin.Context) {
-	if handlers.ratesService == nil {
-		handlers.writeErrorResponse(context, http.StatusServiceUnavailable, "rates service unavailable", "not configured")
-		return
-	}
-
-	fromCurrency := context.Query("from")
-	toCurrency := context.Query("to")
-	amountString := context.Query("amount")
-
-	if fromCurrency == "" || toCurrency == "" || amountString == "" {
-		handlers.writeErrorResponse(context, http.StatusBadRequest, "missing parameters", "from, to, amount are required")
-		return
-	}
-
-	amount, parseError := strconv.ParseFloat(amountString, 64)
-	if parseError != nil || amount < 0 {
-		handlers.writeErrorResponse(context, http.StatusBadRequest, "invalid amount", "must be a positive number")
-		return
-	}
-
-	requestContext := context.Request.Context()
-	conversionResponse, conversionError := handlers.ratesService.Convert(
-		requestContext,
-		strings.ToUpper(fromCurrency),
-		strings.ToUpper(toCurrency),
-		amount,
-	)
-
-	if conversionError != nil {
-		handlers.writeErrorResponse(context, http.StatusBadGateway, "conversion failed", conversionError.Error())
-		return
-	}
-
-	context.JSON(http.StatusOK, conversionResponse)
-}
-
 // GetRatesByBase returns rates for a specific base currency using path parameter
 func (handlers *Handlers) GetRatesByBase(context *gin.Context) {
 	if handlers.ratesService == nil {
@@ -183,20 +143,6 @@ func (handlers *Handlers) GetRatesByBase(context *gin.Context) {
 	}
 
 	context.JSON(http.StatusOK, exchangeRates)
-}
-
-// GetSupportedCurrencies returns a list of supported currencies
-func (handlers *Handlers) GetSupportedCurrencies(context *gin.Context) {
-	supportedCurrencies := []string{
-		"USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "SEK", "NZD",
-		"BRL", "RUB", "INR", "KRW", "SGD", "HKD", "NOK", "MXN", "TRY", "ZAR",
-		"PLN", "CZK", "HUF", "ILS", "CLP", "PHP", "AED", "COP", "SAR", "THB",
-	}
-
-	context.JSON(http.StatusOK, gin.H{
-		"currencies": supportedCurrencies,
-		"count":      len(supportedCurrencies),
-	})
 }
 
 // GetPosts handles requests to fetch all posts
