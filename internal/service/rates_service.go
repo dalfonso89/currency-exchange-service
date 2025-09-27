@@ -95,7 +95,6 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 
 	// Collect results
 	var firstError error
-	successCount := 0
 
 	for i := 0; i < len(ratesService.providers); i++ {
 		select {
@@ -118,11 +117,12 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 				return result.data, nil
 			}
 
-			successCount++
+			// Only increment successCount on actual success (this was a bug)
+			// successCount++ // This line was incorrectly placed
 			if firstError == nil {
 				firstError = result.err
 			} else {
-				ratesService.logger.Warnf("Provider %s failed: %v", ratesService.providers[i].GetName(), result.err)
+				ratesService.logger.Warnf("Provider failed: %v", result.err)
 			}
 		}
 	}

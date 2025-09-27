@@ -38,10 +38,7 @@ func (pf *ProviderFactory) CreateProviders() []ExchangeRateProvider {
 			continue
 		}
 
-		provider := &HTTPExchangeRateProvider{
-			config: providerConfig,
-			logger: pf.logger,
-		}
+		provider := NewHTTPExchangeRateProvider(providerConfig, pf.logger)
 		providers = append(providers, provider)
 	}
 
