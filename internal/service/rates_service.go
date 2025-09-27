@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -130,27 +129,6 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 	// If we get here, all providers failed
 	ratesService.logger.Errorf("All %d exchange rate providers failed", len(ratesService.providers))
 	return models.RatesResponse{}, firstError
-}
-
-func (ratesService *RatesService) Convert(requestContext context.Context, fromCurrency, toCurrency string, amount float64) (models.ConvertResponse, error) {
-	baseCurrency := strings.ToUpper(fromCurrency)
-	exchangeRates, fetchError := ratesService.GetRates(requestContext, baseCurrency)
-	if fetchError != nil {
-		return models.ConvertResponse{}, fetchError
-	}
-	exchangeRate, rateExists := exchangeRates.Rates[strings.ToUpper(toCurrency)]
-	if !rateExists {
-		return models.ConvertResponse{}, fmt.Errorf("rate not found for %s", toCurrency)
-	}
-	convertedAmount := amount * exchangeRate
-	return models.ConvertResponse{
-		From:      fromCurrency,
-		To:        toCurrency,
-		Amount:    amount,
-		Rate:      exchangeRate,
-		Converted: convertedAmount,
-		Provider:  exchangeRates.Provider,
-	}, nil
 }
 
 // GetProviderStatus returns the status of all configured providers

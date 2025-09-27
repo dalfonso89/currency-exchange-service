@@ -57,18 +57,6 @@ func MockRatesResponse() models.RatesResponse {
 	}
 }
 
-// MockConvertResponse creates a mock convert response for testing
-func MockConvertResponse() models.ConvertResponse {
-	return models.ConvertResponse{
-		From:      "USD",
-		To:        "EUR",
-		Amount:    100.0,
-		Rate:      0.85,
-		Converted: 85.0,
-		Provider:  "test-provider",
-	}
-}
-
 // MockHealthCheck creates a mock health check response for testing
 func MockHealthCheck() models.HealthCheck {
 	return models.HealthCheck{
@@ -76,14 +64,6 @@ func MockHealthCheck() models.HealthCheck {
 		Timestamp: time.Now(),
 		Version:   "1.0.0",
 		Uptime:    "1m30s",
-	}
-}
-
-// MockAPIResponse creates a mock API response for testing
-func MockAPIResponse() models.APIResponse {
-	return models.APIResponse{
-		Data:   map[string]interface{}{"id": 1, "title": "test"},
-		Status: 200,
 	}
 }
 
