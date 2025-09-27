@@ -33,6 +33,13 @@ type ServiceError struct {
 	Cause   error
 }
 
+// ProviderStatus represents the status of a provider
+type ProviderStatus struct {
+	Name     string `json:"name"`
+	Enabled  bool   `json:"enabled"`
+	Priority int    `json:"priority"`
+}
+
 func (e ServiceError) Error() string {
 	if e.Cause != nil {
 		return fmt.Sprintf("%s: %v", e.Message, e.Cause)
@@ -217,11 +224,4 @@ func (ratesService *RatesService) GetProviderStatus() []ProviderStatus {
 		}
 	}
 	return statuses
-}
-
-// ProviderStatus represents the status of a provider
-type ProviderStatus struct {
-	Name     string `json:"name"`
-	Enabled  bool   `json:"enabled"`
-	Priority int    `json:"priority"`
 }
