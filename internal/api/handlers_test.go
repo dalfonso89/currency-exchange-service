@@ -52,7 +52,13 @@ func TestNewHandlers(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	if handlers == nil {
 		t.Fatal("NewHandlers() returned nil")
@@ -71,7 +77,13 @@ func TestHandlers_HealthCheck(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	req := httptest.NewRequest("GET", "/health", nil)
 	w := httptest.NewRecorder()
@@ -104,11 +116,17 @@ func TestHandlers_GetRates(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	// Use real rates service
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers = handlers.WithRates(ratesService)
+	handlers.ratesService = ratesService
 
 	req := httptest.NewRequest("GET", "/api/v1/rates", nil)
 	w := httptest.NewRecorder()
@@ -127,11 +145,17 @@ func TestHandlers_GetRatesByBase(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	// Use real rates service
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers = handlers.WithRates(ratesService)
+	handlers.ratesService = ratesService
 
 	req := httptest.NewRequest("GET", "/api/v1/rates/EUR", nil)
 	w := httptest.NewRecorder()
@@ -151,7 +175,13 @@ func TestHandlers_GetPosts(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	req := httptest.NewRequest("GET", "/api/v1/posts", nil)
 	w := httptest.NewRecorder()
@@ -178,7 +208,13 @@ func TestHandlers_GetPostByID(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	req := httptest.NewRequest("GET", "/api/v1/posts/1", nil)
 	w := httptest.NewRecorder()
@@ -206,7 +242,13 @@ func TestHandlers_GetUsers(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	req := httptest.NewRequest("GET", "/api/v1/users", nil)
 	w := httptest.NewRecorder()
@@ -233,7 +275,13 @@ func TestHandlers_GetComments(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	req := httptest.NewRequest("GET", "/api/v1/comments", nil)
 	w := httptest.NewRecorder()

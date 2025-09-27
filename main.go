@@ -30,7 +30,13 @@ func main() {
 	rateLimiter := ratelimit.NewLimiter(cfg, logger)
 
 	// Initialize HTTP handlers
-	handlers := api.NewHandlers(apiService, logger).WithRates(ratesService).WithRateLimit(rateLimiter)
+	handlerConfig := api.HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  rateLimiter,
+	}
+	handlers := api.NewHandlers(handlerConfig)
 
 	// Setup Gin router
 	router := handlers.SetupRoutes()

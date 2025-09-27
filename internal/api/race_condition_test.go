@@ -33,7 +33,13 @@ func TestRaceConditionCacheAccess(t *testing.T) {
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
@@ -135,7 +141,13 @@ func TestRaceConditionRateLimiter(t *testing.T) {
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	rateLimiter := ratelimit.NewLimiter(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService).WithRateLimit(rateLimiter)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  rateLimiter,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
@@ -228,7 +240,13 @@ func TestRaceConditionProviderAccess(t *testing.T) {
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()

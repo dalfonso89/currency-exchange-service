@@ -30,7 +30,13 @@ func TestConcurrentRatesRequestsWithMocks(t *testing.T) {
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
@@ -174,7 +180,13 @@ func TestRaceConditionDetectionWithMocks(t *testing.T) {
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
@@ -267,7 +279,13 @@ func TestCacheConsistencyWithMocks(t *testing.T) {
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
@@ -365,7 +383,13 @@ func TestStressLoadWithMocks(t *testing.T) {
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()

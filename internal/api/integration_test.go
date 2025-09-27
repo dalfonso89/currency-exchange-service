@@ -45,7 +45,13 @@ func NewIntegrationTestSuite() *IntegrationTestSuite {
 	ratesService := service.NewRatesService(cfg, logger)
 
 	// Create handlers
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  nil, // No rate limiter in tests
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	// Setup router
 	gin.SetMode(gin.TestMode)

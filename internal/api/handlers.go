@@ -15,6 +15,14 @@ import (
 	"currency-exchange-api/internal/service"
 )
 
+// HandlerConfig contains all dependencies for the Handlers
+type HandlerConfig struct {
+	APIService   *service.APIService
+	Logger       *logrus.Logger
+	RatesService *service.RatesService
+	RateLimiter  *ratelimit.Limiter
+}
+
 // Handlers contains all HTTP handlers
 type Handlers struct {
 	apiService   *service.APIService
@@ -24,25 +32,15 @@ type Handlers struct {
 	rateLimiter  *ratelimit.Limiter
 }
 
-// NewHandlers creates a new handlers instance
-func NewHandlers(apiService *service.APIService, logger *logrus.Logger) *Handlers {
+// NewHandlers creates a new handlers instance with all dependencies
+func NewHandlers(config HandlerConfig) *Handlers {
 	return &Handlers{
-		apiService: apiService,
-		logger:     logger,
-		startTime:  time.Now(),
+		apiService:   config.APIService,
+		logger:       config.Logger,
+		startTime:    time.Now(),
+		ratesService: config.RatesService,
+		rateLimiter:  config.RateLimiter,
 	}
-}
-
-// WithRates attaches the RatesService after initialization
-func (handlers *Handlers) WithRates(ratesService *service.RatesService) *Handlers {
-	handlers.ratesService = ratesService
-	return handlers
-}
-
-// WithRateLimit attaches the rate limiter after initialization
-func (handlers *Handlers) WithRateLimit(rateLimiter *ratelimit.Limiter) *Handlers {
-	handlers.rateLimiter = rateLimiter
-	return handlers
 }
 
 // SetupRoutes configures all the routes using Gin

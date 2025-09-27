@@ -37,7 +37,13 @@ func TestSimpleRaceCondition(t *testing.T) {
 	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	rateLimiter := ratelimit.NewLimiter(cfg, logger)
-	handlers := NewHandlers(apiService, logger).WithRates(ratesService).WithRateLimit(rateLimiter)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: ratesService,
+		RateLimiter:  rateLimiter,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
@@ -210,7 +216,13 @@ func TestConcurrentHealthChecks(t *testing.T) {
 
 	logger := logger.New("error")
 	apiService := service.NewAPIService(cfg, logger)
-	handlers := NewHandlers(apiService, logger)
+	handlerConfig := HandlerConfig{
+		APIService:   apiService,
+		Logger:       logger,
+		RatesService: nil,
+		RateLimiter:  nil,
+	}
+	handlers := NewHandlers(handlerConfig)
 
 	gin.SetMode(gin.TestMode)
 	router := handlers.SetupRoutes()
