@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,43 +47,23 @@ func classifyError(err error) ErrorType {
 	}
 
 	// Use type switch for error classification
-	switch err.(type) {
+	switch e := err.(type) {
 	case *ServiceError:
-		return err.(*ServiceError).Type
+		return e.Type
 	default:
 		// Check error message patterns
 		errMsg := err.Error()
 		switch {
-		case contains(errMsg, "context canceled") || contains(errMsg, "context deadline exceeded"):
+		case strings.Contains(strings.ToLower(errMsg), "context canceled") || strings.Contains(strings.ToLower(errMsg), "context deadline exceeded"):
 			return ErrorTypeContextCancelled
-		case contains(errMsg, "network") || contains(errMsg, "connection") || contains(errMsg, "timeout"):
+		case strings.Contains(strings.ToLower(errMsg), "network") || strings.Contains(strings.ToLower(errMsg), "connection") || strings.Contains(strings.ToLower(errMsg), "timeout"):
 			return ErrorTypeNetworkError
-		case contains(errMsg, "invalid response") || contains(errMsg, "parse"):
+		case strings.Contains(strings.ToLower(errMsg), "invalid response") || strings.Contains(strings.ToLower(errMsg), "parse"):
 			return ErrorTypeInvalidResponse
 		default:
 			return ErrorTypeUnknown
 		}
 	}
-}
-
-// contains checks if a string contains a substring (case-insensitive)
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) &&
-		(s == substr ||
-			(len(s) > len(substr) &&
-				(s[:len(substr)] == substr ||
-					s[len(s)-len(substr):] == substr ||
-					findSubstring(s, substr))))
-}
-
-// findSubstring performs a simple substring search
-func findSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
 
 type RatesService struct {
@@ -170,6 +151,8 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 	// Collect results
 	var firstError error
 
+	// Use labeled loop for proper break control
+collectLoop:
 	for i := 0; i < len(ratesService.providers); i++ {
 		select {
 		case <-requestContext.Done():
@@ -180,7 +163,7 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 					Cause:   requestContext.Err(),
 				}
 			}
-			break
+			break collectLoop
 		case result := <-resultsChannel:
 			if result.err == nil {
 				// Cache the successful result
