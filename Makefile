@@ -40,6 +40,37 @@ test-coverage:
 	$(GOTEST) -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out
 
+# Run integration tests with concurrent load testing
+test-integration:
+	$(GOTEST) -v -run="TestConcurrent|TestRace|TestStress|TestCache" ./internal/api
+
+# Run race condition tests
+test-race:
+	$(GOTEST) -v -run="TestRace" ./internal/api
+
+# Run load tests
+test-load:
+	$(GOTEST) -v -run="TestConcurrent|TestStress" ./internal/api
+
+# Run benchmarks
+benchmark:
+	$(GOTEST) -bench=. -benchmem ./internal/api
+
+# Run comprehensive test suite
+test-comprehensive: test test-integration benchmark
+
+# Build load testing tool
+build-loadtest:
+	$(GOBUILD) -o loadtest ./cmd/loadtest
+
+# Run load testing tool
+run-loadtest: build-loadtest
+	./loadtest -url="http://localhost:8081/api/v1/rates" -users=50 -requests=100 -timeout=30s
+
+# Run stress test
+run-stress: build-loadtest
+	./loadtest -url="http://localhost:8081/api/v1/rates" -users=100 -requests=50 -timeout=60s -duration=5m
+
 # Download dependencies
 deps:
 	$(GOMOD) download
@@ -100,6 +131,14 @@ help:
 	@echo "  clean        - Clean build artifacts"
 	@echo "  test         - Run tests"
 	@echo "  test-coverage- Run tests with coverage report"
+	@echo "  test-integration - Run integration tests with concurrent load testing"
+	@echo "  test-race    - Run race condition tests"
+	@echo "  test-load    - Run load tests"
+	@echo "  benchmark    - Run benchmarks"
+	@echo "  test-comprehensive - Run comprehensive test suite"
+	@echo "  build-loadtest - Build load testing tool"
+	@echo "  run-loadtest - Run load testing tool"
+	@echo "  run-stress   - Run stress test"
 	@echo "  deps         - Download dependencies"
 	@echo "  run          - Run the application"
 	@echo "  dev          - Run with hot reload (requires air)"
