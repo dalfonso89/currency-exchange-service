@@ -117,11 +117,50 @@ func (m *MockExchangeRateServer) handler(w http.ResponseWriter, r *http.Request)
 	if path == "/USD" || path == "/latest" {
 		response, found = m.responses["/USD"]
 	} else if query.Get("app_id") != "" {
-		response, found = m.responses["/openexchangerates"]
+		// Handle openexchangerates with dynamic base currency
+		baseCurrency := query.Get("base")
+		if baseCurrency == "" {
+			baseCurrency = "USD" // Default to USD
+		}
+		response = ExchangeRateResponse{
+			Base:      baseCurrency,
+			Timestamp: time.Now().Unix(),
+			Rates: map[string]float64{
+				"USD": 1.0,
+				"EUR": 0.85,
+				"GBP": 0.73,
+				"JPY": 110.0,
+				"CAD": 1.25,
+				"AUD": 1.35,
+			},
+			Provider: "openexchangerates",
+		}
+		found = true
 	} else if path == "/latest" && query.Get("base") != "" {
 		response, found = m.responses["/frankfurter"]
 	} else if query.Get("base") != "" {
 		response, found = m.responses["/exchangeratehost"]
+	} else if len(path) > 1 && path[0] == '/' {
+		// Handle dynamic base currency (e.g., /EUR, /GBP, etc.)
+		baseCurrency := path[1:] // Remove leading slash
+
+		// For erapi provider, return the correct format
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		erapiResponse := map[string]interface{}{
+			"base_code":             baseCurrency,
+			"time_last_update_unix": time.Now().Unix(),
+			"rates": map[string]float64{
+				"USD": 1.0,
+				"EUR": 0.85,
+				"GBP": 0.73,
+				"JPY": 110.0,
+				"CAD": 1.25,
+				"AUD": 1.35,
+			},
+		}
+		json.NewEncoder(w).Encode(erapiResponse)
+		return
 	} else {
 		// Default response - always return USD response
 		response, found = m.responses["/USD"]
@@ -273,7 +312,7 @@ func MockConfigWithMocks(exchangeRateServerURL, jsonPlaceholderServerURL string)
 		ExchangeRateProviders: []config.ExchangeRateProvider{
 			{
 				Name:       "erapi",
-				BaseURL:    exchangeRateServerURL + "/USD",
+				BaseURL:    exchangeRateServerURL,
 				APIKey:     "",
 				Enabled:    true,
 				Priority:   1,

@@ -105,7 +105,14 @@ func TestHandlers_HealthCheck(t *testing.T) {
 }
 
 func TestHandlers_GetRates(t *testing.T) {
-	cfg := testutils.MockConfig()
+	// Create mock servers
+	mockExchangeRateServer := testutils.NewMockExchangeRateServer()
+	defer mockExchangeRateServer.Close()
+	mockJSONPlaceholderServer := testutils.NewMockJSONPlaceholderServer()
+	defer mockJSONPlaceholderServer.Close()
+
+	// Create test configuration with mock servers
+	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
 	logger := testutils.MockLogger()
 	handlerConfig := HandlerConfig{
 		Logger:       logger,
@@ -114,7 +121,7 @@ func TestHandlers_GetRates(t *testing.T) {
 	}
 	handlers := NewHandlers(handlerConfig)
 
-	// Use real rates service
+	// Use rates service with mock servers
 	ratesService := service.NewRatesService(cfg, logger)
 	handlers.ratesService = ratesService
 
@@ -125,14 +132,21 @@ func TestHandlers_GetRates(t *testing.T) {
 
 	handlers.GetRates(c)
 
-	// The service might fail due to external API issues, so we just check it doesn't panic
-	if w.Code == 0 {
-		t.Error("GetRates() did not set status code")
+	// Should succeed with mock servers
+	if w.Code != http.StatusOK {
+		t.Errorf("GetRates() status code = %v, want %v", w.Code, http.StatusOK)
 	}
 }
 
 func TestHandlers_GetRatesByBase(t *testing.T) {
-	cfg := testutils.MockConfig()
+	// Create mock servers
+	mockExchangeRateServer := testutils.NewMockExchangeRateServer()
+	defer mockExchangeRateServer.Close()
+	mockJSONPlaceholderServer := testutils.NewMockJSONPlaceholderServer()
+	defer mockJSONPlaceholderServer.Close()
+
+	// Create test configuration with mock servers
+	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
 	logger := testutils.MockLogger()
 	handlerConfig := HandlerConfig{
 		Logger:       logger,
@@ -141,7 +155,7 @@ func TestHandlers_GetRatesByBase(t *testing.T) {
 	}
 	handlers := NewHandlers(handlerConfig)
 
-	// Use real rates service
+	// Use rates service with mock servers
 	ratesService := service.NewRatesService(cfg, logger)
 	handlers.ratesService = ratesService
 
@@ -153,8 +167,8 @@ func TestHandlers_GetRatesByBase(t *testing.T) {
 
 	handlers.GetRatesByBase(c)
 
-	// The service might fail due to external API issues, so we just check it doesn't panic
-	if w.Code == 0 {
-		t.Error("GetRatesByBase() did not set status code")
+	// Should succeed with mock servers
+	if w.Code != http.StatusOK {
+		t.Errorf("GetRatesByBase() status code = %v, want %v", w.Code, http.StatusOK)
 	}
 }

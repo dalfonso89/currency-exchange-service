@@ -31,7 +31,7 @@ clean:
 	rm -f $(BINARY_NAME)
 	rm -f $(BINARY_UNIX)
 
-# Run tests
+# Run unit tests only
 test:
 	$(GOTEST) -v ./...
 
@@ -40,21 +40,24 @@ test-coverage:
 	$(GOTEST) -coverprofile=coverage.out ./...
 	$(GOCMD) tool cover -html=coverage.out
 
-# Run integration tests with concurrent load testing
+# Run integration tests
 test-integration:
-	$(GOTEST) -v -run="TestConcurrent|TestRace|TestStress|TestCache" ./internal/api
+	$(GOTEST) -tags=integration -v ./internal/api/integration
 
 # Run race condition tests
 test-race:
-	$(GOTEST) -v -run="TestRace" ./internal/api
+	$(GOTEST) -tags=race -v ./internal/api/race
 
-# Run load tests
-test-load:
-	$(GOTEST) -v -run="TestConcurrent|TestStress" ./internal/api
+# Run mock tests
+test-mock:
+	$(GOTEST) -tags=mock -v ./internal/api/mock
 
 # Run benchmarks
 benchmark:
-	$(GOTEST) -bench=. -benchmem ./internal/api
+	$(GOTEST) -tags=benchmark -bench=. -benchmem ./internal/api/benchmark
+
+# Run all test types
+test-all: test test-integration test-race test-mock benchmark
 
 # Run comprehensive test suite
 test-comprehensive: test test-integration benchmark
