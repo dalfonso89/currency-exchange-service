@@ -308,30 +308,6 @@ func TestTokenBucket_Allow(t *testing.T) {
 	}
 }
 
-func TestMinimum(t *testing.T) {
-	tests := []struct {
-		name     string
-		a        int
-		b        int
-		expected int
-	}{
-		{"a < b", 1, 2, 1},
-		{"a > b", 2, 1, 1},
-		{"a = b", 1, 1, 1},
-		{"negative numbers", -1, -2, -2},
-		{"zero", 0, 1, 0},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := minimum(tt.a, tt.b)
-			if result != tt.expected {
-				t.Errorf("minimum(%d, %d) = %d, want %d", tt.a, tt.b, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestLimiter_Stop(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()

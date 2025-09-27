@@ -1,7 +1,6 @@
 package benchmark
 
 import (
-	"context"
 	"currency-exchange-api/internal/api"
 	"currency-exchange-api/internal/logger"
 	"currency-exchange-api/internal/service"
@@ -60,21 +59,6 @@ func NewBenchmarkTestSuite() *BenchmarkTestSuite {
 func (suite *BenchmarkTestSuite) Close() {
 	if suite.server != nil {
 		suite.server.Close()
-	}
-}
-
-// TestSimple tests a simple test
-func TestSimple(t *testing.T) {
-	if 1+1 != 2 {
-		t.Error("Math is broken")
-	}
-}
-
-// BenchmarkSimple tests a simple benchmark
-func BenchmarkSimple(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		// Simple operation
-		_ = i * 2
 	}
 }
 
@@ -142,19 +126,5 @@ func BenchmarkHealthCheck(b *testing.B) {
 			b.Fatalf("Request error: %v", err)
 		}
 		resp.Body.Close()
-	}
-}
-
-// BenchmarkServiceLogic benchmarks the service logic directly
-func BenchmarkServiceLogic(b *testing.B) {
-	// Create test configuration without external dependencies
-	cfg := testutils.MockConfig()
-	logger := logger.New("error")
-	ratesService := service.NewRatesService(cfg, logger)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		// This will fail because there are no mock servers, but it will benchmark the service setup
-		_, _ = ratesService.GetRates(context.Background(), "USD")
 	}
 }
