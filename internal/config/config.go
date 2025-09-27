@@ -23,13 +23,8 @@ type ExchangeRateProvider struct {
 
 // Config holds all configuration for the application
 type Config struct {
-	Port       string
-	LogLevel   string
-	APIBaseURL string
-	APIKey     string
-	Timeout    time.Duration
-	RetryCount int
-	RetryDelay time.Duration
+	Port     string
+	LogLevel string
 
 	// Exchange rate providers (dynamic list)
 	ExchangeRateProviders []ExchangeRateProvider
@@ -48,32 +43,12 @@ func Load() (*Config, error) {
 	// Load .env file if it exists
 	_ = godotenv.Load()
 
-	timeout, err := strconv.Atoi(getEnv("API_TIMEOUT_SECONDS", "30"))
-	if err != nil {
-		timeout = 30
-	}
-
-	retryCount, err := strconv.Atoi(getEnv("API_RETRY_COUNT", "3"))
-	if err != nil {
-		retryCount = 3
-	}
-
-	retryDelay, err := strconv.Atoi(getEnv("API_RETRY_DELAY_SECONDS", "1"))
-	if err != nil {
-		retryDelay = 1
-	}
-
 	// Load exchange rate providers
 	providers := loadExchangeRateProviders()
 
 	return &Config{
-		Port:       getEnv("PORT", "8081"),
-		LogLevel:   getEnv("LOG_LEVEL", "info"),
-		APIBaseURL: getEnv("API_BASE_URL", "https://jsonplaceholder.typicode.com"),
-		APIKey:     getEnv("API_KEY", ""),
-		Timeout:    time.Duration(timeout) * time.Second,
-		RetryCount: retryCount,
-		RetryDelay: time.Duration(retryDelay) * time.Second,
+		Port:     getEnv("PORT", "8081"),
+		LogLevel: getEnv("LOG_LEVEL", "info"),
 
 		ExchangeRateProviders: providers,
 		RatesCacheTTL:         time.Duration(mustAtoi(getEnv("RATES_CACHE_TTL_SECONDS", "60"))) * time.Second,

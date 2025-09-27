@@ -49,11 +49,8 @@ func (m *MockAPIService) FetchComments(ctx context.Context) ([]map[string]interf
 }
 
 func TestNewHandlers(t *testing.T) {
-	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: nil,
 		RateLimiter:  nil,
@@ -64,9 +61,7 @@ func TestNewHandlers(t *testing.T) {
 		t.Fatal("NewHandlers() returned nil")
 	}
 
-	if handlers.apiService != apiService {
-		t.Error("NewHandlers() did not set apiService correctly")
-	}
+	// APIService removed - no longer needed
 
 	if handlers.logger != logger {
 		t.Error("NewHandlers() did not set logger correctly")
@@ -74,11 +69,8 @@ func TestNewHandlers(t *testing.T) {
 }
 
 func TestHandlers_HealthCheck(t *testing.T) {
-	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: nil,
 		RateLimiter:  nil,
@@ -115,9 +107,7 @@ func TestHandlers_HealthCheck(t *testing.T) {
 func TestHandlers_GetRates(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: nil,
 		RateLimiter:  nil,
@@ -144,9 +134,7 @@ func TestHandlers_GetRates(t *testing.T) {
 func TestHandlers_GetRatesByBase(t *testing.T) {
 	cfg := testutils.MockConfig()
 	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: nil,
 		RateLimiter:  nil,
@@ -168,138 +156,5 @@ func TestHandlers_GetRatesByBase(t *testing.T) {
 	// The service might fail due to external API issues, so we just check it doesn't panic
 	if w.Code == 0 {
 		t.Error("GetRatesByBase() did not set status code")
-	}
-}
-
-func TestHandlers_GetPosts(t *testing.T) {
-	cfg := testutils.MockConfig()
-	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
-	handlerConfig := HandlerConfig{
-		APIService:   apiService,
-		Logger:       logger,
-		RatesService: nil,
-		RateLimiter:  nil,
-	}
-	handlers := NewHandlers(handlerConfig)
-
-	req := httptest.NewRequest("GET", "/api/v1/posts", nil)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
-
-	handlers.GetPosts(c)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("GetPosts() status = %v, want %v", w.Code, http.StatusOK)
-	}
-
-	var response models.APIResponse
-	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-		t.Fatalf("GetPosts() response unmarshal error = %v", err)
-	}
-
-	if response.Status != http.StatusOK {
-		t.Errorf("GetPosts() response status = %v, want %v", response.Status, http.StatusOK)
-	}
-}
-
-func TestHandlers_GetPostByID(t *testing.T) {
-	cfg := testutils.MockConfig()
-	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
-	handlerConfig := HandlerConfig{
-		APIService:   apiService,
-		Logger:       logger,
-		RatesService: nil,
-		RateLimiter:  nil,
-	}
-	handlers := NewHandlers(handlerConfig)
-
-	req := httptest.NewRequest("GET", "/api/v1/posts/1", nil)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
-	c.Params = gin.Params{{Key: "id", Value: "1"}}
-
-	handlers.GetPostByID(c)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("GetPostByID() status = %v, want %v", w.Code, http.StatusOK)
-	}
-
-	var response models.APIResponse
-	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-		t.Fatalf("GetPostByID() response unmarshal error = %v", err)
-	}
-
-	if response.Status != http.StatusOK {
-		t.Errorf("GetPostByID() response status = %v, want %v", response.Status, http.StatusOK)
-	}
-}
-
-func TestHandlers_GetUsers(t *testing.T) {
-	cfg := testutils.MockConfig()
-	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
-	handlerConfig := HandlerConfig{
-		APIService:   apiService,
-		Logger:       logger,
-		RatesService: nil,
-		RateLimiter:  nil,
-	}
-	handlers := NewHandlers(handlerConfig)
-
-	req := httptest.NewRequest("GET", "/api/v1/users", nil)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
-
-	handlers.GetUsers(c)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("GetUsers() status = %v, want %v", w.Code, http.StatusOK)
-	}
-
-	var response models.APIResponse
-	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-		t.Fatalf("GetUsers() response unmarshal error = %v", err)
-	}
-
-	if response.Status != http.StatusOK {
-		t.Errorf("GetUsers() response status = %v, want %v", response.Status, http.StatusOK)
-	}
-}
-
-func TestHandlers_GetComments(t *testing.T) {
-	cfg := testutils.MockConfig()
-	logger := testutils.MockLogger()
-	apiService := service.NewAPIService(cfg, logger)
-	handlerConfig := HandlerConfig{
-		APIService:   apiService,
-		Logger:       logger,
-		RatesService: nil,
-		RateLimiter:  nil,
-	}
-	handlers := NewHandlers(handlerConfig)
-
-	req := httptest.NewRequest("GET", "/api/v1/comments", nil)
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
-
-	handlers.GetComments(c)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("GetComments() status = %v, want %v", w.Code, http.StatusOK)
-	}
-
-	var response models.APIResponse
-	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
-		t.Fatalf("GetComments() response unmarshal error = %v", err)
-	}
-
-	if response.Status != http.StatusOK {
-		t.Errorf("GetComments() response status = %v, want %v", response.Status, http.StatusOK)
 	}
 }

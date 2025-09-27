@@ -18,13 +18,8 @@ func MockLogger() *logrus.Logger {
 // MockConfig creates a mock configuration for testing
 func MockConfig() *config.Config {
 	return &config.Config{
-		Port:       "8081",
-		LogLevel:   "debug",
-		APIBaseURL: "https://jsonplaceholder.typicode.com",
-		APIKey:     "test-key",
-		Timeout:    30 * time.Second,
-		RetryCount: 3,
-		RetryDelay: 1 * time.Second,
+		Port:     "8081",
+		LogLevel: "debug",
 
 		ExchangeRateProviders: []config.ExchangeRateProvider{
 			{

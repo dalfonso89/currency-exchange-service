@@ -28,10 +28,8 @@ func TestConcurrentRatesRequestsWithMocks(t *testing.T) {
 	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil,
@@ -178,10 +176,8 @@ func TestRaceConditionDetectionWithMocks(t *testing.T) {
 	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil,
@@ -277,10 +273,8 @@ func TestCacheConsistencyWithMocks(t *testing.T) {
 	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil,
@@ -381,10 +375,8 @@ func TestStressLoadWithMocks(t *testing.T) {
 	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil,

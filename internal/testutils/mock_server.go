@@ -264,11 +264,6 @@ func MockConfigWithMocks(exchangeRateServerURL, jsonPlaceholderServerURL string)
 	return &config.Config{
 		Port:                  "0", // Use random port
 		LogLevel:              "error",
-		APIBaseURL:            jsonPlaceholderServerURL,
-		APIKey:                "test-key",
-		Timeout:               5 * time.Second,
-		RetryCount:            3,
-		RetryDelay:            1 * time.Second,
 		RatesCacheTTL:         60 * time.Second,
 		MaxConcurrentRequests: 4,
 		RateLimitEnabled:      true,

@@ -31,10 +31,8 @@ func TestRaceConditionCacheAccess(t *testing.T) {
 	cfg.RateLimitEnabled = false // Disable rate limiting for this test
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil,
@@ -138,11 +136,9 @@ func TestRaceConditionRateLimiter(t *testing.T) {
 	cfg.RateLimitBurst = 20
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	rateLimiter := ratelimit.NewLimiter(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  rateLimiter,
@@ -238,10 +234,8 @@ func TestRaceConditionProviderAccess(t *testing.T) {
 	cfg.RateLimitEnabled = false
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil,

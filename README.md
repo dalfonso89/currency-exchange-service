@@ -26,11 +26,6 @@ A high-performance real-time currency exchange rate microservice built with Go a
 - `GET /api/v1/convert?from=USD&to=EUR&amount=100` - Convert between currencies
 - `GET /api/v1/currencies` - List supported currencies
 
-### Legacy Endpoints (Backward Compatibility)
-- `GET /api/v1/posts` - Fetch all posts
-- `GET /api/v1/posts/:id` - Fetch specific post by ID
-- `GET /api/v1/users` - Fetch all users
-- `GET /api/v1/comments` - Fetch all comments
 
 ## Quick Start
 

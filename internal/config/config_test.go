@@ -33,10 +33,6 @@ func TestLoad(t *testing.T) {
 			expected: func(cfg *Config) bool {
 				return cfg.Port == "8081" &&
 					cfg.LogLevel == "info" &&
-					cfg.APIBaseURL == "https://jsonplaceholder.typicode.com" &&
-					cfg.Timeout == 30*time.Second &&
-					cfg.RetryCount == 3 &&
-					cfg.RetryDelay == 1*time.Second &&
 					len(cfg.ExchangeRateProviders) == 4 &&
 					cfg.RatesCacheTTL == 60*time.Second &&
 					cfg.MaxConcurrentRequests == 4 &&
@@ -64,9 +60,6 @@ func TestLoad(t *testing.T) {
 			expected: func(cfg *Config) bool {
 				return cfg.Port == "9090" &&
 					cfg.LogLevel == "debug" &&
-					cfg.Timeout == 60*time.Second &&
-					cfg.RetryCount == 5 &&
-					cfg.RetryDelay == 2*time.Second &&
 					cfg.RatesCacheTTL == 120*time.Second &&
 					cfg.MaxConcurrentRequests == 8 &&
 					cfg.RateLimitEnabled == false &&

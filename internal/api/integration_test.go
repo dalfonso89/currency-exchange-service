@@ -41,12 +41,10 @@ func NewIntegrationTestSuite() *IntegrationTestSuite {
 	logger := logger.New("error")
 
 	// Create services
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 
 	// Create handlers
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  nil, // No rate limiter in tests

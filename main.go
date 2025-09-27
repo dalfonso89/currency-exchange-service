@@ -25,13 +25,11 @@ func main() {
 	logger := logger.New(cfg.LogLevel)
 
 	// Initialize services
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	rateLimiter := ratelimit.NewLimiter(cfg, logger)
 
 	// Initialize HTTP handlers
 	handlerConfig := api.HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  rateLimiter,

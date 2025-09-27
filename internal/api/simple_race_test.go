@@ -34,11 +34,9 @@ func TestSimpleRaceCondition(t *testing.T) {
 	cfg.RateLimitBurst = 20
 
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	ratesService := service.NewRatesService(cfg, logger)
 	rateLimiter := ratelimit.NewLimiter(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: ratesService,
 		RateLimiter:  rateLimiter,
@@ -211,13 +209,8 @@ func TestConcurrentHealthChecks(t *testing.T) {
 	defer mockExchangeRateServer.Close()
 	defer mockJSONPlaceholderServer.Close()
 
-	// Create test configuration with mock servers
-	cfg := testutils.MockConfigWithMocks(mockExchangeRateServer.URL(), mockJSONPlaceholderServer.URL())
-
 	logger := logger.New("error")
-	apiService := service.NewAPIService(cfg, logger)
 	handlerConfig := HandlerConfig{
-		APIService:   apiService,
 		Logger:       logger,
 		RatesService: nil,
 		RateLimiter:  nil,
