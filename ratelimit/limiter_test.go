@@ -1,11 +1,12 @@
 package ratelimit
 
 import (
-	"currency-exchange-api/testutils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/dalfonso89/currency-exchange-service/testutils"
 )
 
 func TestNewLimiter(t *testing.T) {

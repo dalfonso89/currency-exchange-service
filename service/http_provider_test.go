@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
-	"currency-exchange-api/config"
-	"currency-exchange-api/testutils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/dalfonso89/currency-exchange-service/config"
+	"github.com/dalfonso89/currency-exchange-service/testutils"
 )
 
 func TestHTTPExchangeRateProvider_GetName(t *testing.T) {

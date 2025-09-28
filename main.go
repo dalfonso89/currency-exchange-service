@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
-	"currency-exchange-api/api"
-	"currency-exchange-api/config"
-	"currency-exchange-api/logger"
-	"currency-exchange-api/platform"
-	"currency-exchange-api/ratelimit"
-	"currency-exchange-api/service"
+	"github.com/dalfonso89/currency-exchange-service/api"
+	"github.com/dalfonso89/currency-exchange-service/config"
+	"github.com/dalfonso89/currency-exchange-service/logger"
+	"github.com/dalfonso89/currency-exchange-service/platform"
+	"github.com/dalfonso89/currency-exchange-service/ratelimit"
+	"github.com/dalfonso89/currency-exchange-service/service"
 )
 
 func main() {

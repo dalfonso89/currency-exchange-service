@@ -2,13 +2,14 @@ package api
 
 import (
 	"context"
-	"currency-exchange-api/models"
-	"currency-exchange-api/service"
-	"currency-exchange-api/testutils"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dalfonso89/currency-exchange-service/models"
+	"github.com/dalfonso89/currency-exchange-service/service"
+	"github.com/dalfonso89/currency-exchange-service/testutils"
 
 	"github.com/gin-gonic/gin"
 )

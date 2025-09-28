@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"currency-exchange-api/config"
-	"currency-exchange-api/logger"
+	"github.com/dalfonso89/currency-exchange-service/config"
+	"github.com/dalfonso89/currency-exchange-service/logger"
 )
 
 // Limiter implements a token bucket rate limiter per IP

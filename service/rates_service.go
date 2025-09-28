@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"currency-exchange-api/config"
-	"currency-exchange-api/logger"
-	"currency-exchange-api/models"
+	"github.com/dalfonso89/currency-exchange-service/config"
+	"github.com/dalfonso89/currency-exchange-service/logger"
+	"github.com/dalfonso89/currency-exchange-service/models"
 
 	"golang.org/x/sync/singleflight"
 )

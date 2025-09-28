@@ -2,10 +2,11 @@ package testutils
 
 import (
 	"context"
-	"currency-exchange-api/config"
-	"currency-exchange-api/logger"
-	"currency-exchange-api/models"
 	"time"
+
+	"github.com/dalfonso89/currency-exchange-service/config"
+	"github.com/dalfonso89/currency-exchange-service/logger"
+	"github.com/dalfonso89/currency-exchange-service/models"
 )
 
 // MockLogger creates a mock logger for testing

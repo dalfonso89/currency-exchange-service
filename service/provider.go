@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"currency-exchange-api/config"
-	"currency-exchange-api/logger"
-	"currency-exchange-api/models"
+
+	"github.com/dalfonso89/currency-exchange-service/config"
+	"github.com/dalfonso89/currency-exchange-service/logger"
+	"github.com/dalfonso89/currency-exchange-service/models"
 )
 
 // ExchangeRateProvider defines the interface for exchange rate providers

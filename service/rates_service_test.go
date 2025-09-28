@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
-	"currency-exchange-api/models"
-	"currency-exchange-api/testutils"
 	"testing"
 	"time"
+
+	"github.com/dalfonso89/currency-exchange-service/models"
+	"github.com/dalfonso89/currency-exchange-service/testutils"
 )
 
 // MockProvider is a mock implementation of ExchangeRateProvider for testing

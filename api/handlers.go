@@ -8,11 +8,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"currency-exchange-api/logger"
-	"currency-exchange-api/middleware"
-	"currency-exchange-api/models"
-	"currency-exchange-api/ratelimit"
-	"currency-exchange-api/service"
+	"github.com/dalfonso89/currency-exchange-service/logger"
+	"github.com/dalfonso89/currency-exchange-service/middleware"
+	"github.com/dalfonso89/currency-exchange-service/models"
+	"github.com/dalfonso89/currency-exchange-service/ratelimit"
+	"github.com/dalfonso89/currency-exchange-service/service"
 )
 
 // HandlerConfig contains all dependencies for the Handlers

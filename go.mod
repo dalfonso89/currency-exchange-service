@@ -1,4 +1,4 @@
-module currency-exchange-api
+module github.com/dalfonso89/currency-exchange-service
 
 go 1.21
 

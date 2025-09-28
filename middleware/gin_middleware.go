@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"currency-exchange-api/logger"
+	"github.com/dalfonso89/currency-exchange-service/logger"
 )
 
 // RequestLogger creates a custom request logger middleware

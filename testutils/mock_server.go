@@ -1,11 +1,12 @@
 package testutils
 
 import (
-	"currency-exchange-api/config"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"time"
+
+	"github.com/dalfonso89/currency-exchange-service/config"
 )
 
 // MockExchangeRateServer creates a mock HTTP server for exchange rate APIs
