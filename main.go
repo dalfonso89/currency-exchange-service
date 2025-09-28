@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"time"
 
-	"currency-exchange-api/internal/api"
-	"currency-exchange-api/internal/config"
-	"currency-exchange-api/internal/logger"
-	"currency-exchange-api/internal/platform"
-	"currency-exchange-api/internal/ratelimit"
-	"currency-exchange-api/internal/service"
+	"currency-exchange-api/api"
+	"currency-exchange-api/config"
+	"currency-exchange-api/logger"
+	"currency-exchange-api/platform"
+	"currency-exchange-api/ratelimit"
+	"currency-exchange-api/service"
 )
 
 func main() {
