@@ -167,9 +167,6 @@ cp env.example .env
 ├── models/                 # Data models
 │   ├── models.go
 │   └── models_test.go
-├── platform/              # Platform-specific code
-│   ├── shutdown_windows.go
-│   └── shutdown_unix.go
 ├── ratelimit/              # Rate limiting
 │   ├── limiter.go
 │   └── limiter_test.go

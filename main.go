@@ -51,31 +51,49 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 	}
 
+	// Create shutdown context with timeout
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer shutdownCancel()
+
 	// Start server in a goroutine
+	serverErr := make(chan error, 1)
 	go func() {
 		loggerInstance.Info("Starting microservice on port " + cfg.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			loggerInstance.Fatalf("Failed to start server: %v", err)
+			serverErr <- err
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server
+	// Wait for interrupt signal or server error
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
-	<-quit
+
+	select {
+	case sig := <-quit:
+		loggerInstance.Infof("Received signal: %v", sig)
+	case err := <-serverErr:
+		loggerInstance.Errorf("Server error: %v", err)
+		shutdownCancel() // Cancel shutdown context
+		os.Exit(1)
+	case <-shutdownCtx.Done():
+		loggerInstance.Error("Shutdown context cancelled")
+		os.Exit(1)
+	}
 
 	loggerInstance.Info("Shutting down server...")
 
 	// Stop rate limiter cleanup
 	rateLimiter.Stop()
 
-	// Give outstanding requests 30 seconds to complete
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(ctx); err != nil {
-		loggerInstance.Fatalf("Server forced to shutdown: %v", err)
+	// Graceful server shutdown
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		loggerInstance.Errorf("Server shutdown error: %v", err)
+		// Force close if graceful shutdown fails
+		if closeErr := server.Close(); closeErr != nil {
+			loggerInstance.Errorf("Force close error: %v", closeErr)
+		}
+		os.Exit(1)
 	}
 
-	loggerInstance.Info("Server stopped")
+	loggerInstance.Info("Server stopped gracefully")
 }
