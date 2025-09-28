@@ -13,7 +13,7 @@ A high-performance real-time currency exchange rate microservice built with Go a
 - **Smart Caching**: In-memory caching with configurable TTL to reduce API calls
 - **Health Monitoring**: Comprehensive health checks with external API status
 - **Security**: Automatic security headers and request tracking
-- **Production Ready**: Docker support, graceful shutdown, and comprehensive logging
+- **Production Ready**: Graceful shutdown and comprehensive logging
 
 ## API Endpoints
 
@@ -28,18 +28,6 @@ A high-performance real-time currency exchange rate microservice built with Go a
 
 
 ## Quick Start
-
-### Using Docker Compose (Recommended)
-
-1. Clone the repository
-2. Run the service:
-   ```bash
-   docker-compose up --build
-   ```
-
-The service will be available at `http://localhost:8080`
-
-### Running Locally
 
 1. **Prerequisites**:
    - Go 1.21 or later
@@ -163,47 +151,58 @@ cp env.example .env
 .
 ├── main.go                 # Application entry point
 ├── go.mod                  # Go module definition
-├── Dockerfile              # Docker configuration
-├── docker-compose.yml      # Docker Compose configuration
 ├── env.example             # Environment variables example
 ├── README.md               # This file
-└── internal/               # Internal packages
-    ├── api/                # HTTP handlers and routes
-    │   └── handlers.go
-    ├── config/             # Configuration management
-    │   └── config.go
-    ├── logger/             # Logging utilities
-    │   └── logger.go
-    ├── middleware/         # Gin middleware
-    │   └── gin_middleware.go
-    ├── models/             # Data models
-    │   └── models.go
-    ├── platform/           # Platform-specific code
-    │   ├── shutdown_windows.go
-    │   └── shutdown_unix.go
-    ├── ratelimit/          # Rate limiting
-    │   └── limiter.go
-    └── service/            # Business logic services
-        ├── api_service.go
-        └── rates_service.go
+├── Makefile                # Build automation
+├── api/                    # HTTP handlers and routes
+│   ├── handlers.go
+│   └── handlers_test.go
+├── config/                 # Configuration management
+│   ├── config.go
+│   └── config_test.go
+├── logger/                 # Logging utilities
+│   └── logger.go
+├── middleware/             # Gin middleware
+│   └── gin_middleware.go
+├── models/                 # Data models
+│   ├── models.go
+│   └── models_test.go
+├── platform/              # Platform-specific code
+│   ├── shutdown_windows.go
+│   └── shutdown_unix.go
+├── ratelimit/              # Rate limiting
+│   ├── limiter.go
+│   └── limiter_test.go
+├── service/                # Business logic services
+│   ├── http_provider.go
+│   ├── http_provider_test.go
+│   ├── provider.go
+│   ├── rates_service.go
+│   └── rates_service_test.go
+├── testutils/              # Testing utilities
+│   ├── mock_server.go
+│   └── testutils.go
+└── cmd/                    # Command-line tools
+    └── loadtest/
+        └── main.go
 ```
 
 ## Development
 
 ### Adding New API Endpoints
 
-1. Add new methods to the appropriate service in `internal/service/`
-2. Add corresponding handlers in `internal/api/handlers.go`
+1. Add new methods to the appropriate service in `service/`
+2. Add corresponding handlers in `api/handlers.go`
 3. Register new routes in the `SetupRoutes()` method
 
 ### Adding New Middleware
 
-1. Create middleware functions in `internal/middleware/gin_middleware.go`
+1. Create middleware functions in `middleware/gin_middleware.go`
 2. Add them to the middleware chain in `SetupRoutes()`
 
 ### Adding New Data Models
 
-1. Define new structs in `internal/models/models.go`
+1. Define new structs in `models/models.go`
 2. Update the service methods to handle the new data types
 
 ### Testing
@@ -264,7 +263,7 @@ Consider adding metrics collection using libraries like:
    - Set up alerting for critical errors
 
 4. **Deployment**:
-   - Use container orchestration (Kubernetes, Docker Swarm)
+   - Use container orchestration (Kubernetes)
    - Implement blue-green or rolling deployments
    - Set up proper logging aggregation
    - Configure auto-scaling
