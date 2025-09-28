@@ -8,14 +8,13 @@ import (
 	"time"
 
 	"currency-exchange-api/config"
-
-	"github.com/sirupsen/logrus"
+	"currency-exchange-api/logger"
 )
 
 // Limiter implements a token bucket rate limiter per IP
 type Limiter struct {
 	Configuration *config.Config
-	logger        *logrus.Logger
+	logger        logger.Logger
 
 	// Map of IP -> token bucket
 	clientBuckets map[string]*TokenBucket
@@ -33,16 +32,15 @@ type TokenBucket struct {
 	lastRefill   time.Time
 	refillRate   int
 	refillPeriod time.Duration
-	mu           sync.Mutex
 }
 
 // NewLimiter creates a new rate limiter
-func NewLimiter(configuration *config.Config, logger *logrus.Logger) *Limiter {
+func NewLimiter(configuration *config.Config, logger logger.Logger) *Limiter {
 	rateLimiter := &Limiter{
 		Configuration: configuration,
 		logger:        logger,
 		clientBuckets: make(map[string]*TokenBucket),
-		cleanupTicker: time.NewTicker(5 * time.Minute),
+		cleanupTicker: time.NewTicker(2 * time.Minute),
 		stopCleanup:   make(chan struct{}),
 	}
 
@@ -59,20 +57,22 @@ func (rateLimiter *Limiter) Allow(clientIP string) bool {
 	}
 
 	rateLimiter.bucketsMutex.Lock()
-	tokenBucket, bucketExists := rateLimiter.clientBuckets[clientIP]
-	if !bucketExists {
-		tokenBucket = &TokenBucket{
+	defer rateLimiter.bucketsMutex.Unlock()
+
+	// Get or create bucket for this IP
+	bucket, exists := rateLimiter.clientBuckets[clientIP]
+	if !exists {
+		bucket = &TokenBucket{
 			capacity:     rateLimiter.Configuration.RateLimitBurst,
 			tokens:       rateLimiter.Configuration.RateLimitBurst,
 			lastRefill:   time.Now(),
 			refillRate:   rateLimiter.Configuration.RateLimitRequests,
 			refillPeriod: rateLimiter.Configuration.RateLimitWindow,
 		}
-		rateLimiter.clientBuckets[clientIP] = tokenBucket
+		rateLimiter.clientBuckets[clientIP] = bucket
 	}
-	rateLimiter.bucketsMutex.Unlock()
 
-	return tokenBucket.Allow()
+	return bucket.Allow()
 }
 
 // Middleware returns an HTTP middleware for rate limiting
@@ -132,12 +132,11 @@ func (rateLimiter *Limiter) cleanup() {
 		case <-rateLimiter.cleanupTicker.C:
 			rateLimiter.bucketsMutex.Lock()
 			currentTime := time.Now()
-			for clientIP, tokenBucket := range rateLimiter.clientBuckets {
-				tokenBucket.mu.Lock()
-				if currentTime.Sub(tokenBucket.lastRefill) > 24*time.Hour {
+			for clientIP, bucket := range rateLimiter.clientBuckets {
+				// Remove buckets that haven't been refilled for a long time
+				if currentTime.Sub(bucket.lastRefill) > bucket.refillPeriod*2 {
 					delete(rateLimiter.clientBuckets, clientIP)
 				}
-				tokenBucket.mu.Unlock()
 			}
 			rateLimiter.bucketsMutex.Unlock()
 		case <-rateLimiter.stopCleanup:
@@ -154,20 +153,15 @@ func (rateLimiter *Limiter) Stop() {
 
 // Allow checks if a token is available in the bucket
 func (tokenBucket *TokenBucket) Allow() bool {
-	tokenBucket.mu.Lock()
-	defer tokenBucket.mu.Unlock()
-
-	currentTime := time.Now()
+	now := time.Now()
 
 	// Refill tokens based on time elapsed
-	if currentTime.After(tokenBucket.lastRefill) {
-		timeElapsed := currentTime.Sub(tokenBucket.lastRefill)
-		tokensToAdd := int(timeElapsed.Seconds() / tokenBucket.refillPeriod.Seconds() * float64(tokenBucket.refillRate))
+	timeElapsed := now.Sub(tokenBucket.lastRefill)
+	tokensToAdd := int(timeElapsed / tokenBucket.refillPeriod * time.Duration(tokenBucket.refillRate))
 
-		if tokensToAdd > 0 {
-			tokenBucket.tokens = minimum(tokenBucket.capacity, tokenBucket.tokens+tokensToAdd)
-			tokenBucket.lastRefill = currentTime
-		}
+	if tokensToAdd > 0 {
+		tokenBucket.tokens = min(tokenBucket.capacity, tokenBucket.tokens+tokensToAdd)
+		tokenBucket.lastRefill = now
 	}
 
 	// Check if we have tokens available
@@ -179,10 +173,10 @@ func (tokenBucket *TokenBucket) Allow() bool {
 	return false
 }
 
-// minimum returns the minimum of two integers
-func minimum(firstValue, secondValue int) int {
-	if firstValue < secondValue {
-		return firstValue
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
 	}
-	return secondValue
+	return b
 }

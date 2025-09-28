@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"currency-exchange-api/api"
@@ -22,15 +23,17 @@ func main() {
 	}
 
 	// Initialize logger
-	logger := logger.New(cfg.LogLevel)
+	loggerInstance := logger.New(cfg.LogLevel)
+	logrusLogger := loggerInstance.(*logger.LogrusLogger)
+	logrusLogger.SetOutput(os.Stdout)
 
 	// Initialize services
-	ratesService := service.NewRatesService(cfg, logger)
-	rateLimiter := ratelimit.NewLimiter(cfg, logger)
+	ratesService := service.NewRatesService(cfg, loggerInstance)
+	rateLimiter := ratelimit.NewLimiter(cfg, loggerInstance)
 
 	// Initialize HTTP handlers
 	handlerConfig := api.HandlerConfig{
-		Logger:       logger,
+		Logger:       loggerInstance,
 		RatesService: ratesService,
 		RateLimiter:  rateLimiter,
 	}
@@ -49,9 +52,9 @@ func main() {
 
 	// Start server in a goroutine
 	go func() {
-		logger.Info("Starting microservice on port " + cfg.Port)
+		loggerInstance.Info("Starting microservice on port " + cfg.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("Failed to start server: %v", err)
+			loggerInstance.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
@@ -60,7 +63,7 @@ func main() {
 	defer stop()
 	<-shutdownCtx.Done()
 
-	logger.Info("Shutting down server...")
+	loggerInstance.Info("Shutting down server...")
 
 	// Stop rate limiter cleanup
 	rateLimiter.Stop()
@@ -70,8 +73,8 @@ func main() {
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
-		logger.Fatalf("Server forced to shutdown: %v", err)
+		loggerInstance.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	logger.Info("Server exited")
+	loggerInstance.Info("Server stopped")
 }

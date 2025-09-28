@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"currency-exchange-api/config"
+	"currency-exchange-api/logger"
 	"currency-exchange-api/models"
 
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -75,7 +75,7 @@ func classifyError(err error) ErrorType {
 
 type RatesService struct {
 	configuration *config.Config
-	logger        *logrus.Logger
+	logger        logger.Logger
 	providers     []ExchangeRateProvider
 
 	cacheMutex sync.RWMutex
@@ -84,7 +84,7 @@ type RatesService struct {
 	singleFlightGroup singleflight.Group
 }
 
-func NewRatesService(configuration *config.Config, logger *logrus.Logger) *RatesService {
+func NewRatesService(configuration *config.Config, logger logger.Logger) *RatesService {
 	// Create provider factory and get all enabled providers
 	providerFactory := NewProviderFactory(configuration, logger)
 	providers := providerFactory.CreateProviders()
@@ -108,12 +108,12 @@ func (ratesService *RatesService) GetRates(requestContext context.Context, baseC
 	ratesService.cacheMutex.RUnlock()
 
 	cacheKey := "rates:" + baseCurrency
-	result, error, _ := ratesService.singleFlightGroup.Do(cacheKey, func() (interface{}, error) {
+	result, err, _ := ratesService.singleFlightGroup.Do(cacheKey, func() (interface{}, error) {
 		return ratesService.fetchRatesFromProviders(requestContext, baseCurrency)
 	})
 
-	if error != nil {
-		return models.RatesResponse{}, error
+	if err != nil {
+		return models.RatesResponse{}, err
 	}
 	return result.(models.RatesResponse), nil
 }
@@ -127,33 +127,24 @@ func (ratesService *RatesService) fetchRatesFromProviders(requestContext context
 		}
 	}
 
-	type providerResult struct {
-		data models.RatesResponse
-		err  error
-	}
-
-	// Create channels for results
 	resultsChannel := make(chan providerResult, len(ratesService.providers))
+	var wg sync.WaitGroup
 
-	// Limit concurrent requests
-	maxConcurrent := ratesService.configuration.MaxConcurrentRequests
-	if maxConcurrent <= 0 {
-		maxConcurrent = len(ratesService.providers)
-	}
-
-	semaphore := make(chan struct{}, maxConcurrent)
-
-	// Launch goroutines for each provider
 	for _, provider := range ratesService.providers {
+		wg.Add(1)
 		go func(p ExchangeRateProvider) {
-			semaphore <- struct{}{}        // Acquire semaphore
-			defer func() { <-semaphore }() // Release semaphore
-
+			defer wg.Done()
 			ratesService.logger.Debugf("Fetching rates from provider: %s", p.GetName())
 			data, err := p.GetRates(requestContext, baseCurrency)
 			resultsChannel <- providerResult{data, err}
 		}(provider)
 	}
+
+	// Wait for all providers to finish or context to be cancelled
+	go func() {
+		wg.Wait()
+		close(resultsChannel)
+	}()
 
 	// Collect results
 	var firstError error
@@ -224,4 +215,9 @@ func (ratesService *RatesService) GetProviderStatus() []ProviderStatus {
 		}
 	}
 	return statuses
+}
+
+type providerResult struct {
+	data models.RatesResponse
+	err  error
 }

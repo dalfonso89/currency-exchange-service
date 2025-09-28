@@ -4,13 +4,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+
+	"currency-exchange-api/logger"
 )
 
 // RequestLogger creates a custom request logger middleware
-func RequestLogger(logger *logrus.Logger) gin.HandlerFunc {
+func RequestLogger(log logger.Logger) gin.HandlerFunc {
 	return gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
-		logger.WithFields(map[string]interface{}{
+		log.WithFields(logger.Fields{
 			"timestamp":  param.TimeStamp.Format(time.RFC3339),
 			"status":     param.StatusCode,
 			"latency":    param.Latency,
@@ -50,20 +51,15 @@ func RequestID() gin.HandlerFunc {
 
 // generateRequestID generates a simple request ID
 func generateRequestID() string {
-	return time.Now().Format("20060102150405") + "-" + randomString(8)
+	return time.Now().Format("20060102150405") + "-" + randomString(6)
 }
 
 // randomString generates a random string of specified length
 func randomString(length int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
-	now := time.Now()
 	for i := range b {
-		// Use a more random approach with multiple time sources and index
-		seed := now.UnixNano() + int64(i)*1000000 + int64(now.Nanosecond())
-		b[i] = charset[seed%int64(len(charset))]
-		// Add a small delay to ensure different timestamps
-		time.Sleep(time.Nanosecond)
+		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
 	}
 	return string(b)
 }

@@ -6,40 +6,38 @@ import (
 	"currency-exchange-api/logger"
 	"currency-exchange-api/models"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 // MockLogger creates a mock logger for testing
-func MockLogger() *logrus.Logger {
+func MockLogger() logger.Logger {
 	return logger.New("debug")
 }
 
 // MockConfig creates a mock configuration for testing
 func MockConfig() *config.Config {
 	return &config.Config{
-		Port:     "8081",
-		LogLevel: "debug",
-
+		Port:                  "8081",
+		LogLevel:              "debug",
+		RatesCacheTTL:         5 * time.Minute,
+		MaxConcurrentRequests: 100,
+		RateLimitEnabled:      true,
+		RateLimitRequests:     100,
+		RateLimitWindow:       time.Minute,
+		RateLimitBurst:        10,
 		ExchangeRateProviders: []config.ExchangeRateProvider{
 			{
-				Name:       "test-provider",
-				BaseURL:    "https://api.test.com/latest",
-				APIKey:     "test-api-key",
-				Enabled:    true,
-				Priority:   1,
-				Timeout:    30 * time.Second,
-				RetryCount: 3,
-				RetryDelay: 1 * time.Second,
+				Name:     "erapi",
+				BaseURL:  "https://api.exchangerate-api.com/v4/latest",
+				Enabled:  true,
+				Priority: 1,
+			},
+			{
+				Name:     "openexchangerates",
+				BaseURL:  "https://openexchangerates.org/api/latest.json",
+				Enabled:  true,
+				Priority: 2,
 			},
 		},
-		RatesCacheTTL:         60 * time.Second,
-		MaxConcurrentRequests: 4,
-
-		RateLimitEnabled:  true,
-		RateLimitRequests: 100,
-		RateLimitWindow:   60 * time.Second,
-		RateLimitBurst:    10,
 	}
 }
 
@@ -50,38 +48,14 @@ func MockRatesResponse() models.RatesResponse {
 		Timestamp: time.Now().Unix(),
 		Rates: map[string]float64{
 			"EUR": 0.85,
-			"GBP": 0.73,
+			"GBP": 0.75,
 			"JPY": 110.0,
 		},
-		Provider: "test-provider",
-	}
-}
-
-// MockHealthCheck creates a mock health check response for testing
-func MockHealthCheck() models.HealthCheck {
-	return models.HealthCheck{
-		Status:    "healthy",
-		Timestamp: time.Now(),
-		Version:   "1.0.0",
-		Uptime:    "1m30s",
-	}
-}
-
-// MockErrorResponse creates a mock error response for testing
-func MockErrorResponse() models.ErrorResponse {
-	return models.ErrorResponse{
-		Error:   "test error",
-		Message: "test error message",
-		Code:    400,
+		Provider: "mock-provider",
 	}
 }
 
 // MockContext creates a mock context for testing
 func MockContext() context.Context {
 	return context.Background()
-}
-
-// MockContextWithTimeout creates a mock context with timeout for testing
-func MockContextWithTimeout(timeout time.Duration) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), timeout)
 }

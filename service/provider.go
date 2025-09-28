@@ -3,44 +3,41 @@ package service
 import (
 	"context"
 	"currency-exchange-api/config"
+	"currency-exchange-api/logger"
 	"currency-exchange-api/models"
-
-	"github.com/sirupsen/logrus"
 )
 
 // ExchangeRateProvider defines the interface for exchange rate providers
 type ExchangeRateProvider interface {
 	GetName() string
-	GetRates(ctx context.Context, baseCurrency string) (models.RatesResponse, error)
 	IsEnabled() bool
 	GetPriority() int
+	GetRates(ctx context.Context, baseCurrency string) (models.RatesResponse, error)
 }
 
-// ProviderFactory creates provider instances
+// ProviderFactory creates exchange rate providers based on configuration
 type ProviderFactory struct {
-	config *config.Config
-	logger *logrus.Logger
+	configuration *config.Config
+	logger        logger.Logger
 }
 
 // NewProviderFactory creates a new provider factory
-func NewProviderFactory(config *config.Config, logger *logrus.Logger) *ProviderFactory {
+func NewProviderFactory(configuration *config.Config, logger logger.Logger) *ProviderFactory {
 	return &ProviderFactory{
-		config: config,
-		logger: logger,
+		configuration: configuration,
+		logger:        logger,
 	}
 }
 
-// CreateProviders creates all enabled providers
-func (pf *ProviderFactory) CreateProviders() []ExchangeRateProvider {
-	providers := make([]ExchangeRateProvider, 0, len(pf.config.ExchangeRateProviders))
+// CreateProviders creates all configured providers
+func (factory *ProviderFactory) CreateProviders() []ExchangeRateProvider {
+	var providers []ExchangeRateProvider
 
-	for _, providerConfig := range pf.config.ExchangeRateProviders {
-		if !providerConfig.Enabled {
-			continue
+	for _, providerConfig := range factory.configuration.ExchangeRateProviders {
+		if providerConfig.Enabled {
+			provider := NewHTTPExchangeRateProvider(providerConfig, factory.logger)
+			providers = append(providers, provider)
 		}
-
-		provider := NewHTTPExchangeRateProvider(providerConfig, pf.logger)
-		providers = append(providers, provider)
 	}
 
 	return providers

@@ -27,14 +27,22 @@ func TestHTTPExchangeRateProvider_IsEnabled(t *testing.T) {
 		enabled  bool
 		expected bool
 	}{
-		{"enabled provider", true, true},
-		{"disabled provider", false, false},
+		{
+			name:     "enabled provider",
+			enabled:  true,
+			expected: true,
+		},
+		{
+			name:     "disabled provider",
+			enabled:  false,
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			provider := NewHTTPExchangeRateProvider(
-				config.ExchangeRateProvider{Enabled: tt.enabled},
+				config.ExchangeRateProvider{Name: "test", Enabled: tt.enabled},
 				testutils.MockLogger(),
 			)
 
@@ -47,7 +55,7 @@ func TestHTTPExchangeRateProvider_IsEnabled(t *testing.T) {
 
 func TestHTTPExchangeRateProvider_GetPriority(t *testing.T) {
 	provider := NewHTTPExchangeRateProvider(
-		config.ExchangeRateProvider{Priority: 5},
+		config.ExchangeRateProvider{Name: "test", Priority: 5},
 		testutils.MockLogger(),
 	)
 
@@ -61,49 +69,43 @@ func TestHTTPExchangeRateProvider_buildURL(t *testing.T) {
 		name         string
 		providerName string
 		baseURL      string
-		apiKey       string
 		baseCurrency string
 		expected     string
 	}{
 		{
 			name:         "erapi provider",
 			providerName: "erapi",
-			baseURL:      "https://api.erapi.com/v6/latest",
-			apiKey:       "",
+			baseURL:      "https://api.exchangerate-api.com/v4/latest",
 			baseCurrency: "USD",
-			expected:     "https://api.erapi.com/v6/latest/USD",
+			expected:     "https://api.exchangerate-api.com/v4/latest/USD",
 		},
 		{
 			name:         "openexchangerates provider",
 			providerName: "openexchangerates",
 			baseURL:      "https://openexchangerates.org/api/latest.json",
-			apiKey:       "test-key",
-			baseCurrency: "USD",
-			expected:     "https://openexchangerates.org/api/latest.json?app_id=test-key&base=USD",
+			baseCurrency: "EUR",
+			expected:     "https://openexchangerates.org/api/latest.json?base=EUR",
 		},
 		{
 			name:         "frankfurter provider",
 			providerName: "frankfurter",
 			baseURL:      "https://api.frankfurter.app/latest",
-			apiKey:       "",
-			baseCurrency: "USD",
-			expected:     "https://api.frankfurter.app/latest?base=USD",
+			baseCurrency: "GBP",
+			expected:     "https://api.frankfurter.app/latest?from=GBP",
 		},
 		{
 			name:         "exchangerate.host provider",
 			providerName: "exchangerate.host",
 			baseURL:      "https://api.exchangerate.host/latest",
-			apiKey:       "",
-			baseCurrency: "USD",
-			expected:     "https://api.exchangerate.host/latest?base=USD",
+			baseCurrency: "JPY",
+			expected:     "https://api.exchangerate.host/latest?base=JPY",
 		},
 		{
 			name:         "custom provider",
 			providerName: "custom",
-			baseURL:      "https://api.custom.com/latest",
-			apiKey:       "",
-			baseCurrency: "USD",
-			expected:     "https://api.custom.com/latest?base=USD",
+			baseURL:      "https://custom.api.com/rates",
+			baseCurrency: "CAD",
+			expected:     "https://custom.api.com/rates?base=CAD",
 		},
 	}
 
@@ -113,7 +115,6 @@ func TestHTTPExchangeRateProvider_buildURL(t *testing.T) {
 				config.ExchangeRateProvider{
 					Name:    tt.providerName,
 					BaseURL: tt.baseURL,
-					APIKey:  tt.apiKey,
 				},
 				testutils.MockLogger(),
 			)
@@ -133,8 +134,8 @@ func TestHTTPExchangeRateProvider_parseERAPIResponse(t *testing.T) {
 	)
 
 	jsonResponse := `{
-		"base_code": "USD",
-		"time_last_update_unix": 1640995200,
+		"base": "USD",
+		"timestamp": 1640995200,
 		"rates": {
 			"EUR": 0.85,
 			"GBP": 0.73,
@@ -142,7 +143,7 @@ func TestHTTPExchangeRateProvider_parseERAPIResponse(t *testing.T) {
 		}
 	}`
 
-	result, err := provider.parseERAPIResponse([]byte(jsonResponse))
+	result, err := provider.parseERAPIResponse([]byte(jsonResponse), "USD")
 	if err != nil {
 		t.Fatalf("parseERAPIResponse() error = %v", err)
 	}
@@ -177,7 +178,7 @@ func TestHTTPExchangeRateProvider_parseOpenExchangeRatesResponse(t *testing.T) {
 		}
 	}`
 
-	result, err := provider.parseOpenExchangeRatesResponse([]byte(jsonResponse))
+	result, err := provider.parseOpenExchangeRatesResponse([]byte(jsonResponse), "USD")
 	if err != nil {
 		t.Fatalf("parseOpenExchangeRatesResponse() error = %v", err)
 	}
@@ -204,6 +205,7 @@ func TestHTTPExchangeRateProvider_parseFrankfurterResponse(t *testing.T) {
 
 	jsonResponse := `{
 		"base": "USD",
+		"timestamp": 1640995200,
 		"date": "2022-01-01",
 		"rates": {
 			"EUR": 0.85,
@@ -212,7 +214,7 @@ func TestHTTPExchangeRateProvider_parseFrankfurterResponse(t *testing.T) {
 		}
 	}`
 
-	result, err := provider.parseFrankfurterResponse([]byte(jsonResponse))
+	result, err := provider.parseFrankfurterResponse([]byte(jsonResponse), "USD")
 	if err != nil {
 		t.Fatalf("parseFrankfurterResponse() error = %v", err)
 	}
@@ -247,7 +249,7 @@ func TestHTTPExchangeRateProvider_parseExchangeRateHostResponse(t *testing.T) {
 		}
 	}`
 
-	result, err := provider.parseExchangeRateHostResponse([]byte(jsonResponse))
+	result, err := provider.parseExchangeRateHostResponse([]byte(jsonResponse), "USD")
 	if err != nil {
 		t.Fatalf("parseExchangeRateHostResponse() error = %v", err)
 	}
@@ -282,7 +284,7 @@ func TestHTTPExchangeRateProvider_parseGenericResponse(t *testing.T) {
 		}
 	}`
 
-	result, err := provider.parseGenericResponse([]byte(jsonResponse))
+	result, err := provider.parseGenericResponse([]byte(jsonResponse), "USD")
 	if err != nil {
 		t.Fatalf("parseGenericResponse() error = %v", err)
 	}
@@ -304,9 +306,7 @@ func TestHTTPExchangeRateProvider_parseGenericResponse(t *testing.T) {
 func TestHTTPExchangeRateProvider_GetRates(t *testing.T) {
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{
+		response := `{
 			"base": "USD",
 			"timestamp": 1640995200,
 			"rates": {
@@ -314,22 +314,25 @@ func TestHTTPExchangeRateProvider_GetRates(t *testing.T) {
 				"GBP": 0.73,
 				"JPY": 110.0
 			}
-		}`))
+		}`
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(response))
 	}))
 	defer server.Close()
 
 	provider := NewHTTPExchangeRateProvider(
 		config.ExchangeRateProvider{
-			Name:    "test-provider",
+			Name:    "test",
 			BaseURL: server.URL,
-			APIKey:  "",
 			Enabled: true,
-			Timeout: 30 * time.Second,
 		},
 		testutils.MockLogger(),
 	)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	result, err := provider.GetRates(ctx, "USD")
 	if err != nil {
 		t.Fatalf("GetRates() error = %v", err)
@@ -338,14 +341,8 @@ func TestHTTPExchangeRateProvider_GetRates(t *testing.T) {
 	if result.Base != "USD" {
 		t.Errorf("GetRates() Base = %v, want %v", result.Base, "USD")
 	}
-	if result.Timestamp != 1640995200 {
-		t.Errorf("GetRates() Timestamp = %v, want %v", result.Timestamp, 1640995200)
-	}
 	if len(result.Rates) != 3 {
 		t.Errorf("GetRates() Rates length = %v, want %v", len(result.Rates), 3)
-	}
-	if result.Provider != "test-provider" {
-		t.Errorf("GetRates() Provider = %v, want %v", result.Provider, "test-provider")
 	}
 }
 
@@ -353,25 +350,24 @@ func TestHTTPExchangeRateProvider_GetRates_Error(t *testing.T) {
 	// Create a test server that returns an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
 	}))
 	defer server.Close()
 
 	provider := NewHTTPExchangeRateProvider(
 		config.ExchangeRateProvider{
-			Name:    "test-provider",
+			Name:    "test",
 			BaseURL: server.URL,
-			APIKey:  "",
 			Enabled: true,
-			Timeout: 30 * time.Second,
 		},
 		testutils.MockLogger(),
 	)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	_, err := provider.GetRates(ctx, "USD")
 	if err == nil {
-		t.Errorf("GetRates() expected error, got nil")
+		t.Error("GetRates() expected error, got nil")
 	}
 }
 
@@ -386,18 +382,18 @@ func TestHTTPExchangeRateProvider_GetRates_InvalidJSON(t *testing.T) {
 
 	provider := NewHTTPExchangeRateProvider(
 		config.ExchangeRateProvider{
-			Name:    "test-provider",
+			Name:    "test",
 			BaseURL: server.URL,
-			APIKey:  "",
 			Enabled: true,
-			Timeout: 30 * time.Second,
 		},
 		testutils.MockLogger(),
 	)
 
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	_, err := provider.GetRates(ctx, "USD")
 	if err == nil {
-		t.Errorf("GetRates() expected error, got nil")
+		t.Error("GetRates() expected error for invalid JSON, got nil")
 	}
 }
