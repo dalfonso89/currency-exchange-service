@@ -5,12 +5,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/dalfonso89/currency-exchange-service/api"
 	"github.com/dalfonso89/currency-exchange-service/config"
 	"github.com/dalfonso89/currency-exchange-service/logger"
-	"github.com/dalfonso89/currency-exchange-service/platform"
 	"github.com/dalfonso89/currency-exchange-service/ratelimit"
 	"github.com/dalfonso89/currency-exchange-service/service"
 )
@@ -58,10 +59,10 @@ func main() {
 		}
 	}()
 
-	// Create a shutdown context that works across platforms
-	shutdownCtx, stop := platform.NewShutdownContext(context.Background())
-	defer stop()
-	<-shutdownCtx.Done()
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
 
 	loggerInstance.Info("Shutting down server...")
 
