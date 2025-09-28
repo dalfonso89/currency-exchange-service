@@ -95,15 +95,16 @@ func (handlers *Handlers) GetRates(context *gin.Context) {
 	baseCurrency := context.DefaultQuery("base", "USD")
 	requestContext := context.Request.Context()
 
-	_, fetchError := handlers.ratesService.GetRates(requestContext, baseCurrency)
+	exchangeRates, fetchError := handlers.ratesService.GetRates(requestContext, baseCurrency)
 	if fetchError != nil {
+		handlers.logger.Errorf("GetRates error: %v", fetchError)
 		handlers.handleServiceError(context, fetchError)
 		return
 	}
 
-	// Assuming exchangeRates is returned by GetRates, but it's currently ignored.
-	// For this example, we'll just return a placeholder if no error.
-	context.JSON(http.StatusOK, gin.H{"message": "Rates fetched successfully (placeholder)"})
+	handlers.logger.Infof("Returning rates data: %+v", exchangeRates)
+	// Return the actual exchange rates data
+	context.JSON(http.StatusOK, exchangeRates)
 }
 
 // GetRatesByBase returns rates for a specific base currency using path parameter
@@ -116,15 +117,14 @@ func (handlers *Handlers) GetRatesByBase(context *gin.Context) {
 	baseCurrency := strings.ToUpper(context.Param("base"))
 	requestContext := context.Request.Context()
 
-	_, fetchError := handlers.ratesService.GetRates(requestContext, baseCurrency)
+	exchangeRates, fetchError := handlers.ratesService.GetRates(requestContext, baseCurrency)
 	if fetchError != nil {
 		handlers.handleServiceError(context, fetchError)
 		return
 	}
 
-	// Assuming exchangeRates is returned by GetRates, but it's currently ignored.
-	// For this example, we'll just return a placeholder if no error.
-	context.JSON(http.StatusOK, gin.H{"message": "Rates fetched successfully (placeholder)"})
+	// Return the actual exchange rates data
+	context.JSON(http.StatusOK, exchangeRates)
 }
 
 // writeErrorResponse writes an error response using Gin context
